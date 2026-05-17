@@ -50,11 +50,12 @@
 
 @layer base {
   * {
-    @apply border-border;
+    box-sizing: border-box;
   }
   body {
-    @apply bg-background text-foreground;
     margin: 0;
+    background-color: #030712;
+    color: #f9fafb;
   }
   #root {
     width: 100%;
