@@ -16,9 +16,12 @@ export function TokenSavingsChart() {
 
   if (interactions.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <h3 className="text-white font-medium text-sm mb-2">Token Savings</h3>
-        <div className="flex items-center justify-center h-28 text-gray-500 text-xs">
+      <div className="bg-gradient-to-br from-white/5 to-white/0 rounded-lg p-4 border border-purple-500/30 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(139,92,246,0.2)]">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm text-purple-400">✨</span>
+          <h3 className="text-white font-medium text-sm">Token Savings</h3>
+        </div>
+        <div className="flex items-center justify-center h-28 text-slate-400 text-xs">
           Send your first message to start tracking token savings
         </div>
       </div>
@@ -33,9 +36,12 @@ export function TokenSavingsChart() {
   }))
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="bg-gradient-to-br from-white/5 to-white/0 rounded-lg p-4 border border-purple-500/30 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(139,92,246,0.2)]">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-medium text-sm">Token Savings</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-purple-400">✨</span>
+          <h3 className="text-white font-medium text-sm">Token Savings</h3>
+        </div>
         {interactions.length >= 2 && (
           <span className="text-green-400 text-xs font-mono">
             {Math.round(
@@ -47,15 +53,15 @@ export function TokenSavingsChart() {
       </div>
       <ResponsiveContainer width="100%" height={180}>
         <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.2)" />
           <XAxis
             dataKey="interaction"
-            tick={{ fill: '#9ca3af', fontSize: 11 }}
-            label={{ value: 'Interaction #', position: 'insideBottom', fill: '#6b7280', fontSize: 10 }}
+            tick={{ fill: '#cbd5e1', fontSize: 11 }}
+            label={{ value: 'Interaction #', position: 'insideBottom', fill: '#94a3b8', fontSize: 10 }}
           />
-          <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+          <YAxis tick={{ fill: '#cbd5e1', fontSize: 11 }} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
+            contentStyle={{ backgroundColor: 'rgba(10,10,26,0.8)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, backdropFilter: 'blur(10px)' }}
             labelStyle={{ color: '#e5e7eb', fontSize: 11 }}
             itemStyle={{ fontSize: 11 }}
           />

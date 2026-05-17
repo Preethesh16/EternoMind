@@ -37,8 +37,11 @@ export function PipelineStepsPanel() {
     : -1
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-white font-medium text-sm mb-3">Pipeline Steps</h3>
+    <div className="bg-gradient-to-br from-white/5 to-white/0 rounded-lg p-4 border border-purple-500/30 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(139,92,246,0.2)]">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm text-purple-400">🚀</span>
+        <h3 className="text-white font-medium text-sm">Pipeline Steps</h3>
+      </div>
       <div className="flex flex-col gap-1.5">
         {PIPELINE_STEPS.map((step, idx) => {
           const isDone = isLoading && idx < activeIndex
@@ -49,29 +52,29 @@ export function PipelineStepsPanel() {
             <div key={step} className="flex items-center gap-2">
               {/* Status dot */}
               <div
-                className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                className={`w-2 h-2 rounded-full flex-shrink-0 transition-all ${
                   isRunning
-                    ? 'bg-blue-400 animate-pulse'
+                    ? 'bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(192,132,250,0.8)]'
                     : isDone
-                    ? 'bg-green-400'
-                    : 'bg-gray-600'
+                    ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]'
+                    : 'bg-purple-600/40'
                 }`}
               />
               <span
-                className={`text-xs ${
+                className={`text-xs transition-colors ${
                   isRunning
-                    ? 'text-blue-300 font-medium'
+                    ? 'text-purple-300 font-medium'
                     : isDone
                     ? 'text-green-400'
                     : isIdle
-                    ? 'text-gray-500'
-                    : 'text-gray-400'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
                 }`}
               >
                 {STEP_LABELS[step]}
               </span>
               {isDone && (
-                <span className="text-green-500 text-xs ml-auto">✓</span>
+                <span className="text-green-400 text-xs ml-auto">✓</span>
               )}
             </div>
           )

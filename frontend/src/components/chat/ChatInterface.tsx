@@ -34,7 +34,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-950">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Error banner */}
       {error && (
         <div className="flex items-center gap-2 px-4 py-2 bg-red-900/60 border-b border-red-700 text-red-200 text-xs">
@@ -53,9 +53,11 @@ export function ChatInterface() {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="text-4xl mb-3">⚡</div>
-            <p className="text-gray-400 text-sm font-medium">Ask EternoMind anything</p>
-            <p className="text-gray-600 text-xs mt-1">
+            <svg className="w-16 h-16 mb-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 2L5 11H10L11 23L21 9H16L13 2Z" stroke="currentColor" strokeWidth="1.2" className="text-purple-400" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="text-white text-lg font-medium">Ask EternoMind anything</p>
+            <p className="text-slate-400 text-xs mt-2">
               Watch token usage drop as memory learns your context
             </p>
           </div>
@@ -69,18 +71,18 @@ export function ChatInterface() {
       {/* Pipeline step status pill */}
       {currentPipelineStep && (
         <div className="px-4 pb-1">
-          <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/50 rounded-full px-3 py-1 w-fit">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+          <div className="flex items-center gap-2 text-xs text-purple-300 bg-purple-950/60 rounded-full px-3 py-1 w-fit border border-purple-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
             {currentPipelineStep.replace(/_/g, ' ')}
           </div>
         </div>
       )}
 
       {/* Input bar */}
-      <div className="px-4 py-4 border-t border-gray-800">
+      <div className="px-4 py-4 border-t border-purple-500/20 bg-gradient-to-b from-transparent to-black/20">
         <div className="flex gap-2">
           <input
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="flex-1 bg-black/30 backdrop-blur-md border border-purple-500/40 rounded-full px-5 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/50 transition-all shadow-[inset_0_0_20px_rgba(139,92,246,0.1)]"
             placeholder="Ask EternoMind anything…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -90,7 +92,7 @@ export function ChatInterface() {
           <button
             onClick={() => void handleSend()}
             disabled={isLoading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full text-sm font-medium transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]"
           >
             {isLoading ? '…' : 'Send'}
           </button>

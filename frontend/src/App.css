@@ -17,6 +17,18 @@
   }
 }
 
+/* Aurora wave animation for the right edge glow */
+@keyframes aurora-wave {
+  0%, 100% { transform: translateX(0) skewY(-3deg); opacity: 0.6; }
+  50% { transform: translateX(20px) skewY(-3deg); opacity: 0.8; }
+}
+
+.aurora-streak {
+  background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.15) 30%, rgba(139, 92, 246, 0.25) 60%, rgba(139, 92, 246, 0.1) 100%);
+  animation: aurora-wave 6s ease-in-out infinite;
+  transform: skewY(-3deg);
+}
+
 .hero {
   position: relative;
 

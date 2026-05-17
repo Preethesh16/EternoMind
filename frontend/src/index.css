@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animations */
+@keyframes float-stars {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes nebula-glow {
+  0%, 100% { filter: blur(80px) brightness(1); }
+  50% { filter: blur(80px) brightness(1.1); }
+}
+
+@keyframes aurora-wave {
+  0%, 100% { transform: translateX(0) skewY(-3deg); opacity: 0.6; }
+  50% { transform: translateX(20px) skewY(-3deg); opacity: 0.8; }
+}
+
+/* Base Styles */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -46,19 +63,47 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
-}
-
-@layer base {
+  
   * {
     box-sizing: border-box;
   }
+  
   body {
     margin: 0;
-    background-color: #030712;
-    color: #f9fafb;
+    background-color: #0A0A1A;
+    color: #ffffff;
+    overflow: hidden;
   }
+  
   #root {
     width: 100%;
     min-height: 100vh;
   }
+}
+
+/* Component Styles - Galaxy Background */
+.galaxy-bg {
+  background: 
+    radial-gradient(ellipse 800px 600px at 10% 100%, rgba(139, 92, 246, 0.3) 0%, rgba(109, 40, 217, 0.2) 30%, transparent 70%),
+    radial-gradient(ellipse 900px 700px at 100% 50%, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.1) 40%, transparent 80%),
+    linear-gradient(180deg, #0A0A1A 0%, #1a0a3a 50%, #0A0A1A 100%);
+  animation: nebula-glow 8s ease-in-out infinite;
+}
+
+/* Component Styles - Star Particles */
+.stars-bg {
+  background-image: 
+    radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.15) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.08) 1.5px, transparent 1.5px);
+  background-size: 350px 350px, 550px 550px, 650px 650px;
+  background-position: 0 0, 40px 60px, 130px 270px;
+  animation: float-stars 15s ease-in-out infinite;
+}
+
+/* Component Styles - Aurora Streak */
+.aurora-streak {
+  background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.15) 30%, rgba(139, 92, 246, 0.25) 60%, rgba(139, 92, 246, 0.1) 100%);
+  animation: aurora-wave 6s ease-in-out infinite;
+  transform: skewY(-3deg);
 }
