@@ -18,10 +18,10 @@ export async function login(username: string, password: string): Promise<LoginRe
   })
 }
 
-export async function refreshToken(token: string): Promise<{ access_token: string; token_type: string }> {
+export async function refreshToken(refreshToken: string): Promise<{ access_token: string; token_type: string }> {
   return apiFetch('/api/v1/auth/refresh', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${refreshToken}` },
   })
 }
 

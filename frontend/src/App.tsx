@@ -1,18 +1,9 @@
-import { LoginScreen } from './components/auth/LoginScreen'
 import { ChatInterface } from './components/chat/ChatInterface'
 import { TokenSavingsChart } from './components/dashboard/TokenSavingsChart'
 import { PipelineStepsPanel } from './components/dashboard/PipelineStepsPanel'
 import { MetricsBar } from './components/dashboard/MetricsBar'
-import { useSessionStore } from './stores/sessionStore'
 
 export default function App() {
-  const isAuthenticated = useSessionStore((s) => s.isAuthenticated)
-
-  // Show login screen until authenticated + session created
-  if (!isAuthenticated) {
-    return <LoginScreen />
-  }
-
   return (
     <div className="flex h-screen w-screen bg-gray-950 text-white overflow-hidden">
       {/* Left: Chat — 55% */}

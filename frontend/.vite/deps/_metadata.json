@@ -1,0 +1,48 @@
+{
+  "hash": "de3d98b3",
+  "configHash": "8ef206b6",
+  "lockfileHash": "ac9d93db",
+  "browserHash": "d8171d95",
+  "optimized": {
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "9c57e94d",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "0fbb5715",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "f4e01de8",
+      "needsInterop": true
+    },
+    "recharts": {
+      "src": "../../node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "ffbc13bd",
+      "needsInterop": false
+    },
+    "zustand": {
+      "src": "../../node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "2cad896c",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "react-B35R_oEX": {
+      "file": "react-B35R_oEX.js",
+      "isDynamicEntry": false
+    },
+    "react-dom-CYDThRfy": {
+      "file": "react-dom-CYDThRfy.js",
+      "isDynamicEntry": false
+    }
+  }
+}
