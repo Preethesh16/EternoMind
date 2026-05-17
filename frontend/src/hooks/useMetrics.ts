@@ -5,17 +5,18 @@ import { useSessionStore } from '../stores/sessionStore'
 
 export function useMetrics() {
   const sessionId = useSessionStore((s) => s.sessionId)
+  const accessToken = useSessionStore((s) => s.accessToken)
   const setInteractions = useMetricsStore((s) => s.setInteractions)
 
   const refresh = useCallback(async () => {
-    if (!sessionId) return
+    if (!sessionId || !accessToken) return
     try {
-      const data = await getMetrics(sessionId)
+      const data = await getMetrics(sessionId, accessToken)
       setInteractions(data.interactions)
     } catch {
       // metrics fetch failing should not crash the UI
     }
-  }, [sessionId, setInteractions])
+  }, [sessionId, accessToken, setInteractions])
 
   return { refresh }
 }

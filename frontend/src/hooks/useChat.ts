@@ -10,6 +10,7 @@ export function useChat() {
 
   const sessionId = useSessionStore((s) => s.sessionId)
   const userId = useSessionStore((s) => s.userId)
+  const accessToken = useSessionStore((s) => s.accessToken)
 
   const addUserMessage = useChatStore((s) => s.addUserMessage)
   const startAssistantMessage = useChatStore((s) => s.startAssistantMessage)
@@ -22,7 +23,7 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (content: string, onError?: (msg: string) => void) => {
-      if (!sessionId || !userId) return
+      if (!sessionId || !userId || !accessToken) return
 
       // Cancel any in-flight request
       abortRef.current?.abort()
@@ -34,6 +35,7 @@ export function useChat() {
       try {
         await streamChat(
           { session_id: sessionId, message: content, user_id: userId },
+          accessToken,
           (evt) => {
             if (evt.event === 'pipeline_step') {
               setPipelineStep(evt.data.step)
@@ -47,7 +49,7 @@ export function useChat() {
                 memory_hits: evt.data.memory_hits,
               })
               addInteraction({
-                interaction_number: 0, // will be replaced by refreshMetrics
+                interaction_number: 0,
                 token_count_input: evt.data.total_tokens,
                 token_count_output: 0,
                 model_used: evt.data.model,
@@ -58,10 +60,7 @@ export function useChat() {
             } else if (evt.event === 'error') {
               onError?.(evt.data.message)
               finalizeMessage(assistantId, {
-                total_tokens: 0,
-                model: '',
-                latency_ms: 0,
-                memory_hits: 0,
+                total_tokens: 0, model: '', latency_ms: 0, memory_hits: 0,
               })
             }
           },
@@ -74,8 +73,8 @@ export function useChat() {
         }
       }
     },
-    [sessionId, userId, addUserMessage, startAssistantMessage, appendToken,
-     finalizeMessage, setPipelineStep, addInteraction, refreshMetrics]
+    [sessionId, userId, accessToken, addUserMessage, startAssistantMessage,
+     appendToken, finalizeMessage, setPipelineStep, addInteraction, refreshMetrics]
   )
 
   return { sendMessage }

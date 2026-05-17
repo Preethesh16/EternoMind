@@ -6,6 +6,8 @@ export interface MetricsResponse {
   interactions: Interaction[]
 }
 
-export async function getMetrics(sessionId: string): Promise<MetricsResponse> {
-  return apiFetch<MetricsResponse>(`/api/v1/metrics/${sessionId}`)
+export async function getMetrics(sessionId: string, accessToken: string): Promise<MetricsResponse> {
+  return apiFetch<MetricsResponse>(`/api/v1/metrics/${sessionId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
 }

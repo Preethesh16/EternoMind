@@ -15,19 +15,19 @@ export type SSEEvent =
 /**
  * Opens a POST SSE stream to /api/v1/chat.
  * Uses fetch + ReadableStream because native EventSource only supports GET.
- *
- * @param request  Chat request payload
- * @param onEvent  Callback for each parsed SSE event
- * @param signal   AbortSignal to cancel the stream
  */
 export async function streamChat(
   request: ChatRequest,
+  accessToken: string,
   onEvent: (event: SSEEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/api/v1/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
     body: JSON.stringify(request),
     signal,
   })

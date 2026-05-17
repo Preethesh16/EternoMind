@@ -57,3 +57,32 @@ See "Manual Integration Steps" section below.
   - Requires demo user credentials from `seed_demo_user.py`
 
 ---
+
+## [2026-05-17] — Phase 4 Complete: Real Backend Connection
+
+### What was built
+- **LoginScreen component** (`src/components/auth/LoginScreen.tsx`):
+  - Calls `POST /api/v1/auth/login` → stores access_token in sessionStore
+  - Auto-creates session via `POST /api/v1/sessions` (with Bearer token) → stores session_id
+  - Error display for wrong credentials
+- **API layer updated** for Person 1's real backend:
+  - `auth.ts` — login, refresh, logout with correct headers
+  - `sessions.ts` — createSession/getSession with Authorization header (Person 1 uses JWT auth on sessions)
+  - `chat.ts` — streamChat now passes Bearer token
+  - `metrics.ts` — getMetrics now passes Bearer token
+- **Hooks updated**:
+  - `useMetrics` — reads accessToken from sessionStore
+  - `useChat` — reads accessToken from sessionStore, passes to streamChat
+- **App.tsx** — shows LoginScreen when `!isAuthenticated`, main UI when authenticated
+- `tsc --noEmit` passes with zero errors
+
+### What is now working
+- Full login flow against Person 1's real backend
+- Session creation after login
+- UI switches from login screen to main chat view on success
+
+### Next step
+- Phase 5: Docker Compose — blocked until Person 2 (`ai-pipeline`) completes their work
+- Phase 6: Demo polish — after Phase 5
+
+---

@@ -12,13 +12,17 @@ export interface SessionDetail {
   interaction_count: number
 }
 
-export async function createSession(userId: string): Promise<Session> {
+// Person 1's endpoint uses get_current_user — needs Authorization header
+export async function createSession(accessToken: string): Promise<Session> {
   return apiFetch<Session>('/api/v1/sessions', {
     method: 'POST',
-    body: JSON.stringify({ user_id: userId }),
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ user_id: '' }), // backend ignores this, uses JWT sub
   })
 }
 
-export async function getSession(sessionId: string): Promise<SessionDetail> {
-  return apiFetch<SessionDetail>(`/api/v1/sessions/${sessionId}`)
+export async function getSession(sessionId: string, accessToken: string): Promise<SessionDetail> {
+  return apiFetch<SessionDetail>(`/api/v1/sessions/${sessionId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
 }
