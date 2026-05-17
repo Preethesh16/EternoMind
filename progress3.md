@@ -22,3 +22,38 @@
 - Phase 1: Scaffold the React + Vite + TypeScript + TailwindCSS + shadcn/ui project
 
 ---
+
+## [2026-05-17] — Phases 1, 2 & 3 Complete
+
+### What was built
+- **Phase 1**: Vite + React 19 + TypeScript scaffold created. TailwindCSS 3.4.4 configured with full dark-mode CSS variables. Vite proxy set to forward `/api` → `http://localhost:8000`. `@` path alias configured.
+- **Phase 2**: All three Zustand stores implemented:
+  - `sessionStore` — userId, sessionId, accessToken, isAuthenticated
+  - `chatStore` — messages, streaming state, pipeline step indicator
+  - `metricsStore` — per-interaction token data array
+- **Phase 3**: All UI components built and wired with stores (no backend needed):
+  - `StreamingText` — renders content with blinking cursor when streaming
+  - `MessageBubble` — user (blue/right) and assistant (dark/left) with metrics bar
+  - `ChatInterface` — scrollable messages, pipeline step pill, error banner, input bar
+  - `TokenSavingsChart` — Recharts LineChart (input=red, output=green, reference line at 720)
+  - `PipelineStepsPanel` — 11 steps, idle/running/done states
+  - `MetricsBar` — tokens, latency, model badge (orange=large, green=small), memory hits
+- API layer scaffolded: `client.ts`, `auth.ts`, `sessions.ts`, `chat.ts` (POST SSE via ReadableStream), `metrics.ts`
+- Hooks scaffolded: `useChat`, `useMetrics`, `useSSE`
+- TypeScript: `tsc --noEmit` passes with zero errors
+
+### What is now working
+- Full UI renders at `http://localhost:5173` (run `npm run dev` in `frontend/`)
+- All components display correctly in mock/empty state
+- Stores read/write correctly
+- SSE parsing logic ready for real backend
+
+### ⚠️ Manual steps required before Phase 4
+See "Manual Integration Steps" section below.
+
+### Next step
+- Phase 4: Connect to Person 1's backend (branch: `backend-core`)
+  - Requires Person 1 to complete their Phase 1-4 and confirm backend is running at `http://localhost:8000`
+  - Requires demo user credentials from `seed_demo_user.py`
+
+---

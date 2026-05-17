@@ -107,9 +107,9 @@ eternomind/
 
 ## Phase Completion
 
-- [ ] **Phase 1** — Project Scaffold (Vite + React + TS + Tailwind + shadcn/ui)
-- [ ] **Phase 2** — Zustand Stores (chatStore, sessionStore, metricsStore)
-- [ ] **Phase 3** — Chat UI Components with mock data
+- ✅ **Phase 1** — Project Scaffold (Vite + React + TS + Tailwind + shadcn/ui)
+- ✅ **Phase 2** — Zustand Stores (chatStore, sessionStore, metricsStore)
+- ✅ **Phase 3** — Chat UI Components with mock data
 - [ ] **Phase 4** — API Layer & real backend connection *(needs Person 1 backend-core)*
 - [ ] **Phase 5** — Docker Compose + full integration *(needs Person 1 + Person 2)*
 - [ ] **Phase 6** — Demo polish & rehearsal
