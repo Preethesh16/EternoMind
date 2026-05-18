@@ -12,7 +12,13 @@ export async function apiFetch<T>(
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(err.detail ?? 'Request failed')
+    throw new Error((err as { detail?: string }).detail ?? 'Request failed')
   }
   return res.json() as Promise<T>
+}
+
+// Auth-aware fetch — injects Bearer token from sessionStore
+export function getAuthHeaders(token: string | null): Record<string, string> {
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
 }
