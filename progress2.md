@@ -66,3 +66,36 @@ See `project_structure2.md` → "Manual Integration Steps Required" section:
   - Requires Person 1's `backend-core` branch (already merged ✅)
 
 ---
+
+
+## [2026-05-18] — Bugfix: cascadeflow SDK Integration ✅
+
+### Issue raised by Person 3 (in TEAM_NOTES.md)
+`backend/app/optimization/cascadeflow_router.py` was using a non-existent API:
+```python
+self._sdk_client = cascadeflow.Client(api_key=settings.cascadeflow_api_key)  # WRONG
+```
+The real cascadeflow API uses `cascadeflow.init()` + `CascadeAgent`. The fallback rule-based logic kept the demo working, but the SDK was never actually invoked.
+
+### What was fixed
+Rewrote `cascadeflow_router.py` to use the correct API per the official docs:
+- `cascadeflow.init(mode="observe")` — activates the harness once at startup
+- `CascadeAgent(models=[ModelConfig(...)], quality_config={...})` — built with both Groq models in cost order
+- cascadeflow does NOT use its own API key — it uses `GROQ_API_KEY` from the environment
+- Added explicit `os.environ["GROQ_API_KEY"]` export so the provider layer always finds it
+- Routing decision still uses the deterministic rule (memory_hits >= 4 AND token_estimate < 2000 → small model) for the fast pre-execution path
+- The harness now observes all downstream Groq calls for free, even when the SDK isn't strictly being asked to cascade
+
+### Other changes
+- Added `cascadeflow` to `backend/requirements.txt`
+
+### References
+- https://docs.cascadeflow.ai/api-reference/python/init
+- https://docs.cascadeflow.ai/api-reference/python/cascade-agent
+- https://docs.cascadeflow.ai/api-reference/python/environment
+
+### Verification
+- `python3 -m py_compile backend/app/optimization/cascadeflow_router.py` → OK
+- Fallback path still triggers when `cascadeflow` is not installed (ImportError caught)
+
+---
