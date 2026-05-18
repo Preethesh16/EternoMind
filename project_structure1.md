@@ -150,7 +150,9 @@ eternomind/
 - ✅ **Phase 2** — Database Models & Migrations
 - ✅ **Phase 3** — Security Middleware & Auth
 - ✅ **Phase 4** — Sessions & Health Endpoints
-- [ ] **Phase 5** — Handoff to Person 2 & Person 3
+- ✅ **Phase 5** — Handoff (branch pushed + merged to main)
+
+**🟢 All 5 phases complete. Person 1 work is done.**
 
 ---
 
@@ -171,10 +173,10 @@ eternomind/
 
 ### 1. Environment Variables
 After cloning, copy `.env.example` to `.env` and fill in:
-- `SECRET_KEY` — generate with `openssl rand -hex 32`
-- `GROQ_API_KEY` — from [console.groq.com](https://console.groq.com)
-- `HINDSIGHT_API_KEY` — from [hindsight.so](https://hindsight.so)
-- `CASCADEFLOW_API_KEY` — from [cascadeflow.ai](https://cascadeflow.ai)
+- `SECRET_KEY` — generate with `openssl rand -hex 32` (no signup needed)
+- `GROQ_API_KEY` — from [console.groq.com](https://console.groq.com) (free tier)
+- `HINDSIGHT_API_KEY` — from [hindsight.vectorize.io](https://hindsight.vectorize.io) → click "Cloud" → sign up
+- `CASCADEFLOW_API_KEY` — **NOT REQUIRED**. cascadeflow is open-source (`pip install cascadeflow`) and uses your `GROQ_API_KEY` directly. Verified at [docs.cascadeflow.ai/api-reference/python/environment.md](https://docs.cascadeflow.ai/api-reference/python/environment.md)
 
 ### 2. Database Migration
 ```bash
@@ -194,5 +196,26 @@ python scripts/seed_demo_user.py
 cd backend
 uvicorn app.main:app --reload
 ```
+
+---
+
+## API Key Status (as of 2026-05-18)
+
+| Service | Status | Notes |
+|---------|--------|-------|
+| `SECRET_KEY` | ✅ Generated | Local `.env` only, never committed |
+| `GROQ_API_KEY` | ✅ Obtained | From console.groq.com (free tier) |
+| `HINDSIGHT_API_KEY` | ✅ Obtained | From hindsight.vectorize.io (free with promo code) |
+| `CASCADEFLOW_API_KEY` | ❌ Not needed | Open-source library, uses GROQ_API_KEY |
+
+---
+
+## Team Coordination Notes
+
+**2026-05-18 — Unauthorized commit recovery**
+- A teammate force-merged `feature/space-galaxy-redesign` to main without approval
+- Reset main back to commit `c09671a` (last clean state — backend-core merge)
+- `git push --force origin main` to overwrite remote
+- Going forward: all work must go through PRs reviewed before merging to main
 
 ---
