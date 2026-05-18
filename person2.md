@@ -127,7 +127,7 @@ event: token
 data: {"step": "response", "token_delta": "answer "}
 
 event: done
-data: {"total_tokens": 720, "model": "llama3-8b-8192", "latency_ms": 340.5, "memory_hits": 7}
+data: {"total_tokens": 720, "model": "llama-3.1-8b-instant", "latency_ms": 340.5, "memory_hits": 7}
 
 ```
 
@@ -144,7 +144,7 @@ Person 3 calls this to populate the Token Savings Chart.
       "interaction_number": 1,
       "token_count_input": 14800,
       "token_count_output": 612,
-      "model_used": "llama3-70b-8192",
+      "model_used": "llama-3.3-70b-versatile",
       "memory_hits": 0,
       "latency_ms": 2100.5
     }
@@ -438,10 +438,10 @@ curl http://localhost:8000/api/v1/metrics/s1
 
 **Expected output** (approximate):
 ```
-Interaction 1:  14800 input tokens, model=llama3-70b-8192, memory_hits=0
-Interaction 2:  9200  input tokens, model=llama3-70b-8192, memory_hits=2
-Interaction 5:  3100  input tokens, model=llama3-8b-8192,  memory_hits=5
-Interaction 10: 720   input tokens, model=llama3-8b-8192,  memory_hits=8
+Interaction 1:  14800 input tokens, model=llama-3.3-70b-versatile, memory_hits=0
+Interaction 2:  9200  input tokens, model=llama-3.3-70b-versatile, memory_hits=2
+Interaction 5:  3100  input tokens, model=llama-3.1-8b-instant,    memory_hits=5
+Interaction 10: 720   input tokens, model=llama-3.1-8b-instant,    memory_hits=8
 ```
 
 When done, push: `git push -u origin ai-pipeline`

@@ -119,7 +119,7 @@ class CascadeflowRouter:
             token_estimate: Estimated token count of the optimized prompt.
 
         Returns:
-            Groq model name string (e.g. "llama3-8b-8192" or "llama3-70b-8192").
+            Groq model name string (e.g. "llama-3.1-8b-instant" or "llama-3.3-70b-versatile").
         """
         # Initialize the SDK lazily on first call. This sets self._sdk_available
         # and registers the harness so any Groq calls made later in the pipeline
