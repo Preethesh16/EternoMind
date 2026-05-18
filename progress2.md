@@ -66,3 +66,103 @@ See `project_structure2.md` → "Manual Integration Steps Required" section:
   - Requires Person 1's `backend-core` branch (already merged ✅)
 
 ---
+
+## [2026-05-18] — Phases 4 & 5 Code Pushed (untested)
+
+### What was built
+- `backend/app/agents/state.py` — `AgentState` TypedDict
+- `backend/app/agents/graph.py` — LangGraph StateGraph definition
+- `backend/app/agents/nodes/*.py` — all 8 pipeline nodes
+- `backend/app/runtime/pipeline.py` — `run_pipeline()` orchestrator
+- `backend/app/api/chat.py` — SSE chat endpoint with InteractionLog write
+- `backend/app/api/metrics.py` — metrics retrieval endpoint
+- Both routers registered in `main.py`
+
+### Phase status update
+- ✅ Phase 4 — LangGraph state machine: code complete
+- ✅ Phase 5 — chat + metrics endpoints: code complete
+- [ ] Phase 6 — 10-interaction validation: pending
+
+---
+
+## [2026-05-18] — End-to-End Integration Testing (by Person 1)
+
+> Person 1 ran end-to-end tests against this code and found 4 critical bugs.
+> The pipeline now works after these fixes — see TEAM_NOTES.md for full details.
+
+### Bugs found and fixed by Person 1
+
+**Bug 1 — Groq models decommissioned 🔴 FIXED**
+- `llama3-70b-8192` and `llama3-8b-8192` have been retired by Groq
+- Updated `.env` to:
+  - `GROQ_LARGE_MODEL=llama-3.3-70b-versatile`
+  - `GROQ_SMALL_MODEL=llama-3.1-8b-instant`
+- **Action for Person 2:** update model names in `person2.md`, `README.md`, and any hardcoded references (e.g. `frontend/MetricsBar.tsx` color logic)
+
+**Bug 2 — Hindsight SDK signature mismatch 🔴 FIXED**
+- `hindsight_client.py` called `recall(user_id=...)` and `retain(user_id=...)` — those parameters don't exist
+- Real SDK uses **per-user banks** instead: each user gets a bank named `eternomind-{user_id}`
+- Person 1 rewrote `hindsight_client.py` with:
+  - `_bank_id_for(user_id)` helper for safe bank naming
+  - `_ensure_bank_async()` that calls `acreate_bank()` lazily
+  - `arecall()` and `aretain()` (async variants — see Bug 3)
+- **Action for Person 2:** review the rewrite in `backend/app/memory/hindsight_client.py` and verify the field-extraction logic matches what your nodes expect
+
+**Bug 3 — Sync Hindsight calls inside async event loop 🔴 FIXED**
+- `recall()` and `retain()` are sync — calling them from a FastAPI request raised `this event loop is already running`
+- Switched to `arecall()` / `aretain()` / `acreate_bank()` (the SDK exposes async variants)
+
+**Bug 4 — ChromaDB 0.5.0 incompatible with Python 3.14 🔴 FIXED**
+- Old client raised `Connection reset by peer` on every request
+- Upgraded to `chromadb>=1.5.9` in `requirements.txt`
+- Switched to **embedded mode** (`chromadb.PersistentClient(path='./chroma_data')`) instead of HttpClient
+- No Docker / no account / no API key required for ChromaDB
+- HTTP mode still available — set `CHROMA_USE_HTTP=true` in `.env` to enable
+- **Action for Person 2:** review `backend/app/rag/chroma_client.py` — the new version supports both embedded (default) and HTTP modes
+
+**Bug 5 — Cascadeflow API key not needed (DOCS UPDATE) 🟡**
+- `cascadeflow.Client(api_key=...)` doesn't exist — cascadeflow is open-source and has no API service
+- It uses provider keys directly (Groq for us)
+- Current code falls back to rule-based routing, which works fine for the demo
+- **Action for Person 2:** rewrite `cascadeflow_router.py` using real SDK (`cascadeflow.init()` + `CascadeAgent`) or just keep the rule-based fallback (acceptable for demo)
+- See https://docs.cascadeflow.ai/api-reference/python/cascade-agent.md
+
+### What is now verified working (after fixes)
+- ✅ Full SSE stream emits all 8 pipeline_step events + done event
+- ✅ Groq calls succeed with `llama-3.3-70b-versatile`
+- ✅ Hindsight bank creation + arecall + aretain all succeed (no errors in logs)
+- ✅ ChromaDB embedded mode works, 10 demo docs ingested via `ingest_demo_docs.py`
+- ✅ `interaction_logs` table being written on each chat (interaction_count++)
+- ✅ `/api/v1/metrics/{session_id}` returns proper JSON
+
+### What still needs work (Person 2 next steps)
+
+**Priority 1 — Token reduction not yet visible**
+- After 3 chats on the same topic, `memory_hits` is still 0
+- Possible causes:
+  - Hindsight needs indexing time — wait 30-60s between sends
+  - The `arecall` response shape extraction (`response.memories` vs `response.items`) may not match the actual SDK response — check by logging the raw response
+- **Action:** add `print(response)` debug in `hindsight_client.retrieve()` once and inspect the actual structure
+
+**Priority 2 — Phase 6: 10-interaction validation**
+- `scripts/run_10_interactions.py` exists — run it and verify:
+  - Interaction 1 input tokens ≈ 200-300
+  - By interaction 8-10: input tokens 50%+ lower
+  - Model switches from large to small once memory_hits ≥ 4
+
+**Priority 3 — Update outdated references**
+- `person2.md`, `README.md`, `progress2.md`, `project_structure2.md` still mention old model names
+- `frontend/MetricsBar.tsx` color logic uses old model names — Person 3 needs to update too
+
+### Phase status (2026-05-18 evening)
+
+| Phase | Code | Tested | Notes |
+|-------|------|--------|-------|
+| 1 — Hindsight | ✅ | ✅ | Fixed by P1 (bank-per-user, async API) |
+| 2 — ChromaDB RAG | ✅ | ✅ | Switched to embedded mode |
+| 3 — Optimizer + Router | ✅ | ✅ | Rule-based fallback working |
+| 4 — LangGraph | ✅ | ✅ | All 8 nodes execute in order |
+| 5 — Chat + Metrics API | ✅ | ✅ | SSE stream + DB write working |
+| 6 — Token reduction validation | ⏳ | ⏳ | Pending — run `run_10_interactions.py` |
+
+---

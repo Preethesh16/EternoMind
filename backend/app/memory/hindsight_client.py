@@ -3,15 +3,25 @@ Hindsight persistent memory SDK wrapper.
 
 All pipeline nodes use this single client. If the SDK raises for any reason,
 the methods log the error and return safe defaults — the pipeline never blocks.
+
+Strategy: each user gets their own memory bank named "eternomind-{user_id}".
+The bank is created lazily on first access (idempotent).
 """
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _bank_id_for(user_id: str) -> str:
+    """Generate a safe bank_id for a user (alphanumeric + dashes only)."""
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "-", user_id.lower())[:40] or "anon"
+    return f"eternomind-{safe}"
 
 
 class HindsightClient:
@@ -26,8 +36,8 @@ class HindsightClient:
     def __init__(self, api_key: str) -> None:
         self._api_key = api_key
         self._client: Any = None
-        self._bank_id = "eternomind"
         self._initialized = False
+        self._known_banks: set[str] = set()
 
     def _ensure_client(self) -> None:
         """Lazily initialize the Hindsight SDK client."""
@@ -40,23 +50,42 @@ class HindsightClient:
                 base_url="https://api.hindsight.vectorize.io",
                 api_key=self._api_key,
             )
-            # Ensure the memory bank exists (idempotent)
-            try:
-                self._client.create_bank(
-                    bank_id=self._bank_id,
-                    name="EternoMind User Memories",
-                )
-            except Exception:
-                # Bank already exists — that's fine
-                pass
             self._initialized = True
-            logger.info("[hindsight] Client initialized, bank_id=%s", self._bank_id)
+            logger.info("[hindsight] Client initialized")
         except ImportError:
             logger.warning(
                 "[hindsight] hindsight-client package not installed — "
                 "memory operations will be no-ops"
             )
-            self._initialized = True  # Mark as initialized to avoid repeated attempts
+            self._initialized = True  # avoid repeated attempts
+
+    def _ensure_bank(self, bank_id: str) -> None:
+        """Sync version — only used outside async context."""
+        if bank_id in self._known_banks or self._client is None:
+            return
+        try:
+            self._client.create_bank(
+                bank_id=bank_id,
+                name=f"EternoMind Memory ({bank_id})",
+            )
+            logger.info("[hindsight] created bank=%s", bank_id)
+        except Exception as exc:
+            logger.debug("[hindsight] create_bank skipped: %s", exc)
+        self._known_banks.add(bank_id)
+
+    async def _ensure_bank_async(self, bank_id: str) -> None:
+        """Async version — used inside the FastAPI request event loop."""
+        if bank_id in self._known_banks or self._client is None:
+            return
+        try:
+            await self._client.acreate_bank(
+                bank_id=bank_id,
+                name=f"EternoMind Memory ({bank_id})",
+            )
+            logger.info("[hindsight] created bank=%s", bank_id)
+        except Exception as exc:
+            logger.debug("[hindsight] acreate_bank skipped: %s", exc)
+        self._known_banks.add(bank_id)
 
     async def retrieve(self, user_id: str, query: str) -> list[dict]:
         """
@@ -72,23 +101,31 @@ class HindsightClient:
             if self._client is None:
                 return []
 
-            # The Hindsight SDK recall() method returns ranked memories
-            results = self._client.recall(
-                bank_id=self._bank_id,
+            bank_id = _bank_id_for(user_id)
+            await self._ensure_bank_async(bank_id)
+
+            response = await self._client.arecall(
+                bank_id=bank_id,
                 query=query,
-                user_id=user_id,
-                top_k=10,
+                max_tokens=2048,
+                budget="mid",
             )
 
             memories: list[dict] = []
-            for item in results:
+            # The SDK returns RecallResponse — convert items to dicts
+            items = getattr(response, "memories", None) or getattr(response, "items", None) or []
+            for idx, item in enumerate(items):
+                content = getattr(item, "content", None) or getattr(item, "text", None) or str(item)
+                score = float(getattr(item, "score", None) or getattr(item, "relevance", 0.7))
+                mem_id = str(getattr(item, "id", None) or getattr(item, "memory_id", idx))
                 memories.append(
                     {
-                        "content": getattr(item, "content", str(item)),
-                        "relevance_score": float(getattr(item, "score", 0.5)),
-                        "memory_id": str(getattr(item, "id", "")),
+                        "content": content,
+                        "relevance_score": score,
+                        "memory_id": mem_id,
                     }
                 )
+
             logger.info(
                 "[hindsight] retrieve user=%s query='%.40s' → %d memories",
                 user_id,
@@ -114,11 +151,13 @@ class HindsightClient:
             if self._client is None:
                 return
 
+            bank_id = _bank_id_for(user_id)
+            await self._ensure_bank_async(bank_id)
+
             content = f"Q: {query}\nA: {response}"
-            self._client.retain(
-                bank_id=self._bank_id,
+            await self._client.aretain(
+                bank_id=bank_id,
                 content=content,
-                user_id=user_id,
             )
             logger.info(
                 "[hindsight] update user=%s query='%.40s' stored",
