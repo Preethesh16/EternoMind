@@ -45,8 +45,13 @@ export function useChat() {
         })
 
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }))
-          throw new Error((err as { detail?: string }).detail ?? 'Chat request failed')
+          const errBody = await res.json().catch(() => ({ detail: res.statusText }))
+          const detail = (errBody as { detail?: string }).detail ?? 'Chat request failed'
+          // Map known backend errors to friendly messages
+          if (res.status === 401) throw new Error('Your session expired. Please sign in again.')
+          if (res.status === 429) throw new Error('Rate limited by Groq or backend. Wait a moment and try again.')
+          if (res.status === 503) throw new Error('Backend is starting up. Try again in a few seconds.')
+          throw new Error(detail)
         }
 
         const reader = res.body!.getReader()
@@ -111,7 +116,13 @@ export function useChat() {
         }
       } catch (err: unknown) {
         if ((err as Error).name !== 'AbortError') {
-          onError?.('Could not connect to EternoMind backend. Retrying...')
+          const raw = err instanceof Error ? err.message : 'Unknown error'
+          // Network failure or backend offline
+          if (raw.includes('Failed to fetch') || raw.includes('NetworkError') || raw.includes('ECONNREFUSED')) {
+            onError?.('Could not connect to EternoMind backend. Is it running on port 8000?')
+          } else {
+            onError?.(raw)
+          }
           finalizeMessage(assistantId, { total_tokens: 0, model: '', latency_ms: 0, memory_hits: 0 })
         }
       }

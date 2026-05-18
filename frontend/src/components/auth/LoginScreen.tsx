@@ -34,8 +34,17 @@ export function LoginScreen({ onSuccess }: Props) {
 
       onSuccess()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Login failed'
-      setError(msg === 'Invalid credentials' ? 'Wrong username or password.' : msg)
+      const raw = err instanceof Error ? err.message : 'Login failed'
+      // Map known backend errors to friendly messages
+      if (raw === 'Invalid credentials' || raw.includes('401')) {
+        setError('Wrong username or password.')
+      } else if (raw.includes('Failed to fetch') || raw.includes('NetworkError') || raw.includes('ECONNREFUSED')) {
+        setError('Backend is unreachable. Make sure it is running at http://localhost:8000.')
+      } else if (raw.includes('429') || raw.toLowerCase().includes('rate limit')) {
+        setError('Too many login attempts. Try again in a minute.')
+      } else {
+        setError(raw)
+      }
     } finally {
       setLoading(false)
     }

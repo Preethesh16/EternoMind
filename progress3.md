@@ -155,3 +155,49 @@ See "Manual Integration Steps" section below.
 - Open issues for Person 2 to fix (optional, demo works without): cascadeflow SDK init bug
 
 ---
+
+## [2026-05-18 evening] — Backend Integration Re-verified + Model Name Polish
+
+### Context (from TEAM_NOTES.md)
+- Person 1 ran end-to-end integration tests and fixed 4 critical bugs in Person 2's code:
+  - Groq decommissioned old model names — switched to `llama-3.3-70b-versatile` and `llama-3.1-8b-instant`
+  - Hindsight SDK uses per-user banks, not `user_id` parameter — Person 1 rewrote the wrapper
+  - ChromaDB 0.5.0 incompatible with Python 3.14 — upgraded to 1.5.9, switched to embedded mode
+  - cascadeflow doesn't need API key — Person 2 already fixed this independently
+- Full backend stack is now confirmed working end-to-end
+
+### What was updated on the frontend side
+- Created `src/lib/models.ts` — central helper for model identification, pricing, and badge classes
+  - Future-proofs against further model renames (matches `70b`, `versatile`, `large`, `8b`, `instant`, `small`)
+  - Updated Groq pricing constants to current public rates
+- `MetricsBar.tsx` — uses `modelBadgeClasses(model)` instead of hardcoded `'70b'` check
+- `MessageBubble.tsx` — uses `modelBadgeTextClasses(model)` instead of hardcoded `'70b'` check
+- `TokenSavingsChart.tsx` — uses `estimateCostUsd(tokens, model)` from the central helper
+- All three components now show `title={model}` tooltip on hover for full model name
+
+### Error handling polish (Phase 6)
+- `LoginScreen.tsx` — friendly messages for wrong creds (401), backend offline, rate-limited (429)
+- `useChat.ts` — friendly messages for 401 (session expired), 429 (rate limited), 503 (backend starting), network errors
+
+### Docker Compose update
+- Added `CHROMA_USE_HTTP=true` to backend service env (so the in-container ChromaDB client uses HTTP mode against the chromadb service, while local dev uses embedded mode by default)
+
+### TypeScript
+- `tsc --noEmit` passes with zero errors
+
+### What is now ready for end-to-end test
+1. Start backend natively: `cd backend && uvicorn app.main:app --reload`
+2. Start frontend: `cd frontend && npm run dev`
+3. Log in with `demo` + password from `seed_demo_user.py`
+4. Send chat → SSE events stream, pipeline lights up, metrics bar shows real model name with correct color
+5. Send 3-4 related messages → token savings chart populates with cost overlay
+
+### Manual setup steps (still required, not automatable)
+- Backend `.venv` must be activated and `pip install -r requirements.txt` run
+- `backend/.env` must have real `GROQ_API_KEY`, `HINDSIGHT_API_KEY`, `SECRET_KEY`
+- `alembic upgrade head` must be run once
+- `python scripts/seed_demo_user.py` must be run for credentials
+- `python scripts/ingest_demo_docs.py` must be run for RAG corpus
+- Native Redis must be running on port 6379 (Docker port forwarding may be broken on some machines per Person 1's note)
+
+---
