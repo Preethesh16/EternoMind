@@ -1,0 +1,99 @@
+# EternoMind — Full stack docker-compose
+# Owned by: Person 3 (Frontend + Integration)
+#
+# Boots all 4 services with one command:
+#   docker compose up --build
+#
+# Services:
+#   - redis       (cache + rate limiter, internal only on 6379)
+#   - chromadb    (vector store for RAG, internal only on 8001)
+#   - backend     (FastAPI + LangGraph pipeline, exposed on 8000)
+#   - frontend    (React + Vite dev server, exposed on 5173)
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: eternomind-redis
+    restart: unless-stopped
+    networks: [eternomind]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: eternomind-chromadb
+    restart: unless-stopped
+    networks: [eternomind]
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+    volumes:
+      - chroma_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eternomind-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      # Override host-level URLs so containers can reach each other by service name
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - DATABASE_URL=sqlite:///./data/eternomind.db
+      - CORS_ORIGINS=http://localhost:5173
+    volumes:
+      # Persist SQLite DB between restarts
+      - backend_data:/app/data
+      # Live-reload during development
+      - ./backend/app:/app/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    networks: [eternomind]
+    command: >
+      sh -c "alembic upgrade head &&
+             python scripts/seed_demo_user.py &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eternomind-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      # Frontend talks to backend via the host port (browser runs outside Docker)
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+    depends_on:
+      - backend
+    networks: [eternomind]
+
+networks:
+  eternomind:
+    driver: bridge
+
+volumes:
+  chroma_data:
+    driver: local
+  backend_data:
+    driver: local
