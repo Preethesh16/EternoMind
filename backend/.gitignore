@@ -22,3 +22,6 @@ env
 # OS
 .DS_Store
 Thumbs.db
+
+# ChromaDB embedded data
+chroma_data/
