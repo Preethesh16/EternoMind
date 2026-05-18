@@ -111,8 +111,8 @@ eternomind/
 - ✅ **Phase 2** — Zustand Stores (chatStore, sessionStore, metricsStore)
 - ✅ **Phase 3** — Chat UI Components with mock data
 - ✅ **Phase 4** — API Layer & real backend connection
-- [ ] **Phase 5** — Docker Compose + full integration *(needs Person 2 ai-pipeline)*
-- [ ] **Phase 6** — Demo polish & rehearsal
+- ✅ **Phase 5** — Docker Compose + full integration
+- ✅ **Phase 6** — Demo polish & rehearsal
 
 ---
 

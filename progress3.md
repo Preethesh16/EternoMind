@@ -81,3 +81,77 @@ See "Manual Integration Steps" section below.
 - Phase 6: Demo polish — after full stack works end-to-end
 
 ---
+
+## [2026-05-18] — Phase 5 Complete
+
+### Context
+- Person 2 (`ai-pipeline`) finished and merged Phases 1-5 (LangGraph, Hindsight, RAG, prompt optimizer, cascadeflow router, chat SSE endpoint, metrics endpoint)
+- Person 1 (`backend-core`) confirmed all backend phases done; force-reset main to clean state after unauthorized merge incident
+- Pulled main into `frontend` branch — full stack now available locally
+
+### What was built
+- `docker-compose.yml` — wires all 4 services with health checks, volumes, named network
+  - `redis` (alpine, internal, healthcheck on `redis-cli ping`)
+  - `chromadb` (chromadb/chroma:latest, internal, healthcheck on `/api/v1/heartbeat`)
+  - `backend` (built from `backend/Dockerfile`, port 8000, runs `alembic upgrade head` + `seed_demo_user.py` before uvicorn)
+  - `frontend` (built from `frontend/Dockerfile`, port 5173, Vite dev server with `--host 0.0.0.0`)
+- `backend/Dockerfile` — Python 3.11-slim, build-essential for bcrypt/chromadb compilation
+- `frontend/Dockerfile` — Node 20-alpine, npm install with `--legacy-peer-deps`
+- `backend/.dockerignore` — excludes `__pycache__`, `.venv`, `*.db`, `data/`
+- `frontend/.dockerignore` — excludes `node_modules`, `dist`, `.vite`
+- Volumes: `chroma_data` (vector store) and `backend_data` (SQLite DB) persist across restarts
+- depends_on with `condition: service_healthy` so backend waits for redis + chromadb
+
+### What is now working
+- Single-command full stack: `docker compose up --build`
+- Frontend talks to backend via `VITE_API_URL=http://localhost:8000` (host port mapping)
+- Backend talks to redis via `redis://redis:6379/0` (Docker network)
+- Backend talks to chromadb via `http://chromadb:8000` (Docker network — note chroma's internal port is 8000, not 8001)
+- Live reload still works for both frontend and backend (source-mounted volumes)
+
+### Next step
+- **Phase 6 — Demo Polish**:
+  - Cost estimator on TokenSavingsChart (USD savings legend)
+  - Per-step timing in PipelineStepsPanel (parse `done` event latency)
+  - Responsive layout check at 1280×800
+  - Demo script run-through
+
+---
+
+## [2026-05-18] — Phase 6 Complete 🎉
+
+### What was polished
+- **TokenSavingsChart**:
+  - Added second Y-axis (right) for cost in USD
+  - Cost calculated per interaction using model-aware pricing ($0.002/1k for 70b, $0.0002/1k for 8b)
+  - Purple dashed line shows cost trajectory
+  - "Saved $X.XXXX" badge in header — calculates savings vs baseline (interaction 1 cost × N interactions)
+  - "X% reduction" indicator from interaction 1 to latest
+- **PipelineStepsPanel**:
+  - Tracks per-step start time using `performance.now()`
+  - Shows ms or s next to each completed step (e.g., "245ms", "1.23s")
+  - Resets timings when a new user message starts
+  - Falls back to ✓ checkmark for steps without timing data
+
+### What is now working end-to-end
+- Login → Send message → SSE stream populates messages, pipeline lights up with timings, chart updates with token + cost data
+- Over multiple interactions: chart shows downward trend, model badge switches to green (small model), cost savings counter grows
+- Reset Session resets everything for the demo's "do it again" moment
+- `docker compose up --build` boots the entire stack
+
+### All 6 phases done ✅
+- Phase 1 — Scaffold
+- Phase 2 — Stores
+- Phase 3 — UI Components
+- Phase 4 — Real backend wire
+- Phase 5 — Docker Compose
+- Phase 6 — Demo polish
+
+### Demo readiness
+- Frontend: ready
+- Backend: ready (Person 1 + Person 2)
+- Docker stack: ready
+- Demo script: documented in `person3.md`
+- Open issues for Person 2 to fix (optional, demo works without): cascadeflow SDK init bug
+
+---
