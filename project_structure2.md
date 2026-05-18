@@ -2,7 +2,7 @@
 
 > Owned by: **Person 2 (AI/Agent Pipeline)**
 > Branch: `ai-pipeline`
-> Last updated: 2026-05-18
+> Last updated: 2026-05-18 (evening — Phase 6 validated)
 
 ---
 
@@ -134,19 +134,21 @@ event: token
 data: {"step": "response", "token_delta": "The "}
 
 event: done
-data: {"total_tokens": 720, "model": "llama3-8b-8192", "latency_ms": 340.5, "memory_hits": 7}
+data: {"total_tokens": 720, "model": "llama-3.1-8b-instant", "latency_ms": 340.5, "memory_hits": 7}
 ```
 
 ---
 
 ## Phase Completion
 
-- ✅ **Phase 1** — Hindsight Memory Integration *(fixed by P1: per-user banks, async API)*
-- ✅ **Phase 2** — ChromaDB RAG *(upgraded to chromadb 1.5.9, embedded mode)*
-- ✅ **Phase 3** — Prompt Optimizer & cascadeflow Router *(rule-based fallback)*
-- ✅ **Phase 4** — LangGraph State Machine *(verified end-to-end by P1)*
-- ✅ **Phase 5** — Chat & Metrics API Endpoints *(SSE stream working)*
-- [ ] **Phase 6** — Token Reduction Validation *(pending — run `run_10_interactions.py`)*
+- ✅ **Phase 1** — Hindsight Memory Integration *(per-user banks, async API, response.results extraction)*
+- ✅ **Phase 2** — ChromaDB RAG *(chromadb 1.5.9, embedded mode)*
+- ✅ **Phase 3** — Prompt Optimizer & cascadeflow Router *(real SDK init + rule-based fallback)*
+- ✅ **Phase 4** — LangGraph State Machine *(all 8 nodes verified end-to-end)*
+- ✅ **Phase 5** — Chat & Metrics API Endpoints *(SSE stream + InteractionLog write working)*
+- ✅ **Phase 6** — Token Reduction Validation *(60% reduction over 10 interactions, model switch confirmed)*
+
+🟢 **All 6 phases complete. Person 2 work is done.**
 
 ---
 
