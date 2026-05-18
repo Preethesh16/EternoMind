@@ -2,10 +2,12 @@
 POST /api/v1/chat — SSE streaming chat endpoint.
 
 Calls run_pipeline() and streams SSE events to the frontend.
-After the pipeline completes, writes a row to interaction_logs.
+After the pipeline completes, writes a row to interaction_logs and emits the
+final `done` event with the response text and metrics.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -33,8 +35,12 @@ class ChatRequest(BaseModel):
 
 
 def _sse_event(event_name: str, data: dict) -> str:
-    """Format a single SSE event as per the wire protocol."""
+    """Format a single SSE event per the wire protocol."""
     return f"event: {event_name}\ndata: {json.dumps(data)}\n\n"
+
+
+# Sentinel sent through the queue to signal "pipeline finished, no more events"
+_QUEUE_DONE = object()
 
 
 @router.post("/chat")
@@ -48,111 +54,102 @@ async def chat(
     SSE event sequence:
         pipeline_step × N  — one per pipeline node as it starts
         token × M          — one per Groq token chunk
-        done               — final metrics after memory update
+        done               — final metrics + complete response text
+        error              — only if the pipeline crashed
     """
-    # Sanitize and validate input
     sanitized_message = validate_and_sanitize(request.message)
-
     pipeline_start = time.time()
 
+    # asyncio.Queue is the proper primitive — gives us backpressure and a clean
+    # producer/consumer pattern with no race conditions.
+    event_queue: asyncio.Queue = asyncio.Queue()
+
+    async def event_callback(event_name: str, data: dict) -> None:
+        """Each node calls this (via state) to push an SSE event."""
+        await event_queue.put(_sse_event(event_name, data))
+
     async def event_stream() -> AsyncGenerator[str, None]:
-        collected_events: list[tuple[str, dict]] = []
-
-        async def event_callback(event_name: str, data: dict) -> None:
-            """Collect events and yield them to the SSE stream."""
-            collected_events.append((event_name, data))
-            yield_value = _sse_event(event_name, data)
-            # We can't yield directly from a nested function, so we store
-            # and yield below via a queue approach.
-
-        # Use a list as a simple async queue
-        event_queue: list[str] = []
-
-        async def queuing_callback(event_name: str, data: dict) -> None:
-            event_queue.append(_sse_event(event_name, data))
-
-        # Run the pipeline — it calls queuing_callback for each event
-        final_state = None
-        pipeline_error = None
-
-        try:
-            # We need to interleave pipeline execution with SSE yielding.
-            # Strategy: run pipeline in a task, drain the queue periodically.
-            import asyncio
-
-            pipeline_task = asyncio.create_task(
-                run_pipeline(
+        # Start the pipeline as a background task — events stream into the queue
+        async def _run() -> dict:
+            try:
+                final_state = await run_pipeline(
                     session_id=request.session_id,
                     message=sanitized_message,
                     user_id=request.user_id,
-                    event_callback=queuing_callback,
+                    event_callback=event_callback,
                 )
-            )
+                return final_state  # type: ignore[return-value]
+            finally:
+                # Always signal end-of-stream, even on error
+                await event_queue.put(_QUEUE_DONE)
 
-            # Drain the event queue while the pipeline runs
-            while not pipeline_task.done():
-                while event_queue:
-                    yield event_queue.pop(0)
-                await asyncio.sleep(0.01)
+        pipeline_task = asyncio.create_task(_run())
 
-            # Drain any remaining events after pipeline completes
-            while event_queue:
-                yield event_queue.pop(0)
+        # Drain the queue until the pipeline signals it's finished
+        while True:
+            item = await event_queue.get()
+            if item is _QUEUE_DONE:
+                break
+            yield item  # type: ignore[misc]
 
+        # Pipeline is done — collect the final state
+        final_state: dict = {}
+        try:
             final_state = await pipeline_task
-
         except Exception as exc:
             logger.error("[chat] Pipeline error: %s", exc)
-            pipeline_error = str(exc)
-            yield _sse_event("error", {"step": "pipeline", "message": pipeline_error})
+            yield _sse_event("error", {"step": "pipeline", "message": str(exc)})
+            return
 
-        if final_state is not None:
-            # Write interaction log to DB
-            try:
-                latency_ms = (time.time() - pipeline_start) * 1000
+        # Write interaction_logs row
+        try:
+            latency_ms = (time.time() - pipeline_start) * 1000
 
-                # Get next interaction number for this session
-                existing_count = (
-                    db.query(InteractionLog)
-                    .filter(InteractionLog.session_id == request.session_id)
-                    .count()
-                )
-                interaction_number = existing_count + 1
-
-                log_entry = InteractionLog(
-                    session_id=request.session_id,
-                    user_id=request.user_id,
-                    interaction_number=interaction_number,
-                    token_count_input=final_state.get("token_count_input", 0),
-                    token_count_output=final_state.get("token_count_output", 0),
-                    model_used=final_state.get("selected_model", "unknown"),
-                    memory_hits=final_state.get("memory_hits", 0),
-                    latency_ms=latency_ms,
-                )
-                db.add(log_entry)
-                db.commit()
-                logger.info(
-                    "[chat] Logged interaction #%d for session=%s",
-                    interaction_number,
-                    request.session_id,
-                )
-            except Exception as db_exc:
-                logger.error("[chat] Failed to write interaction log: %s", db_exc)
-                db.rollback()
-
-            # Emit done event
-            yield _sse_event(
-                "done",
-                {
-                    "total_tokens": (
-                        final_state.get("token_count_input", 0)
-                        + final_state.get("token_count_output", 0)
-                    ),
-                    "model": final_state.get("selected_model", "unknown"),
-                    "latency_ms": round((time.time() - pipeline_start) * 1000, 1),
-                    "memory_hits": final_state.get("memory_hits", 0),
-                },
+            existing_count = (
+                db.query(InteractionLog)
+                .filter(InteractionLog.session_id == request.session_id)
+                .count()
             )
+            interaction_number = existing_count + 1
+
+            log_entry = InteractionLog(
+                session_id=request.session_id,
+                user_id=request.user_id,
+                interaction_number=interaction_number,
+                token_count_input=final_state.get("token_count_input", 0),
+                token_count_output=final_state.get("token_count_output", 0),
+                model_used=final_state.get("selected_model", "unknown"),
+                memory_hits=final_state.get("memory_hits", 0),
+                latency_ms=latency_ms,
+            )
+            db.add(log_entry)
+            db.commit()
+            logger.info(
+                "[chat] Logged interaction #%d for session=%s response_len=%d",
+                interaction_number,
+                request.session_id,
+                len(final_state.get("response_text", "")),
+            )
+        except Exception as db_exc:
+            logger.error("[chat] Failed to write interaction log: %s", db_exc)
+            db.rollback()
+
+        # Emit the `done` event — includes the full response_text so the
+        # frontend can fall back to displaying it whole if streaming tokens
+        # were missed (e.g., a model that doesn't actually stream chunks).
+        yield _sse_event(
+            "done",
+            {
+                "total_tokens": (
+                    final_state.get("token_count_input", 0)
+                    + final_state.get("token_count_output", 0)
+                ),
+                "model": final_state.get("selected_model", "unknown"),
+                "latency_ms": round((time.time() - pipeline_start) * 1000, 1),
+                "memory_hits": final_state.get("memory_hits", 0),
+                "response_text": final_state.get("response_text", ""),
+            },
+        )
 
     return StreamingResponse(
         event_stream(),

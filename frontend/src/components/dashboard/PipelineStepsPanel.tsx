@@ -8,11 +8,11 @@ const PIPELINE_STEPS = [
   'context_relevancy',
   'rag_retrieval',
   'prompt_optimizer',
-  'cascadeflow_routing',
-  'groq_llm',
-  'validation',
+  'model_router',
+  'llm_inference',
+  'validator',
   'response',
-  'memory_update',
+  'memory_updater',
 ] as const
 
 const STEP_LABELS: Record<string, string> = {
@@ -22,11 +22,11 @@ const STEP_LABELS: Record<string, string> = {
   context_relevancy: 'Context Relevancy',
   rag_retrieval: 'RAG Retrieval',
   prompt_optimizer: 'Prompt Optimizer',
-  cascadeflow_routing: 'cascadeflow Routing',
-  groq_llm: 'Groq LLM',
-  validation: 'Validation',
+  model_router: 'cascadeflow Routing',
+  llm_inference: 'Groq LLM',
+  validator: 'Validation',
   response: 'Response',
-  memory_update: 'Memory Update',
+  memory_updater: 'Memory Update',
 }
 
 export function PipelineStepsPanel() {

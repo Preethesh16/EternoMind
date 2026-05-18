@@ -41,7 +41,7 @@ async def llm_inference_node(state: AgentState) -> AgentState:
             model=state["selected_model"],
             messages=messages,
             stream=True,
-            max_tokens=2048,
+            max_tokens=1024,  # was 2048 → 256 (too low) → 1024 (balanced)
         )
 
         async for chunk in stream:
