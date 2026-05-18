@@ -40,7 +40,7 @@ export default function App() {
     if (!userId) return
     setResetting(true)
     try {
-      const newSession = await createSession(userId)
+      const newSession = await createSession(userId, accessToken)
       setSession(newSession.session_id)
       clearMessages()
       clearInteractions()

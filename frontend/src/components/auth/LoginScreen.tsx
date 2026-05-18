@@ -26,10 +26,14 @@ export function LoginScreen({ onSuccess }: Props) {
     try {
       // Step 1: Authenticate
       const authData = await login(username.trim(), password.trim())
-      setAuth(username.trim(), authData.access_token)
 
-      // Step 2: Auto-create a session
-      const sessionData = await createSession(username.trim())
+      // Step 2: Auto-create a session (must pass token — endpoint requires auth)
+      // Do NOT mark user as authenticated until BOTH login and session creation succeed,
+      // otherwise the app shows the dashboard with a null sessionId (chat would silently fail)
+      const sessionData = await createSession(username.trim(), authData.access_token)
+
+      // Both succeeded — commit auth + session to the store atomically
+      setAuth(username.trim(), authData.access_token)
       setSession(sessionData.session_id)
 
       onSuccess()

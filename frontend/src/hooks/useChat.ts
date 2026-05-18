@@ -24,7 +24,10 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (content: string, onError?: (msg: string) => void) => {
-      if (!sessionId || !userId) return
+      if (!sessionId || !userId) {
+        onError?.('No active session. Please sign out and sign back in.')
+        return
+      }
 
       // Cancel any in-flight request
       abortRef.current?.abort()
@@ -88,7 +91,17 @@ export function useChat() {
               } else if (evt.event === 'token') {
                 appendToken(assistantId, evt.token_delta)
               } else if (evt.event === 'done') {
-                const d = evt.data as { total_tokens: number; model: string; latency_ms: number; memory_hits: number }
+                const d = evt.data as { total_tokens: number; model: string; latency_ms: number; memory_hits: number; response_text?: string }
+                // If the message bubble is empty (no token events arrived),
+                // fall back to displaying the full response_text from `done`.
+                // This covers the case where the backend streams metadata but
+                // not individual tokens (e.g., model returns response in one chunk).
+                if (d.response_text) {
+                  const current = useChatStore.getState().messages.find((m) => m.id === assistantId)
+                  if (current && !current.content) {
+                    appendToken(assistantId, d.response_text)
+                  }
+                }
                 finalizeMessage(assistantId, {
                   total_tokens: d.total_tokens,
                   model: d.model,
