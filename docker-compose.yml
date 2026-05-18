@@ -51,6 +51,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
+      - CHROMA_USE_HTTP=true
       - DATABASE_URL=sqlite:///./data/eternomind.db
       - CORS_ORIGINS=http://localhost:5173
     volumes:

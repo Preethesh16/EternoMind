@@ -1,5 +1,6 @@
 import type { Message } from '../../stores/chatStore'
 import { StreamingText } from './StreamingText'
+import { modelBadgeTextClasses } from '../../lib/models'
 
 interface Props { message: Message }
 
@@ -28,9 +29,8 @@ export function MessageBubble({ message }: Props) {
             </span>
             <span>·</span>
             <span
-              className={`font-mono font-medium ${
-                message.metrics.model.includes('70b') ? 'text-orange-400' : 'text-green-400'
-              }`}
+              className={`font-mono font-medium ${modelBadgeTextClasses(message.metrics.model)}`}
+              title={message.metrics.model}
             >
               {message.metrics.model}
             </span>

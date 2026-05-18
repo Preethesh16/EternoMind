@@ -10,17 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useMetricsStore } from '../../stores/metricsStore'
-
-// Cost per 1k tokens (USD) — Groq public pricing approximations
-const COST_PER_1K = {
-  large: 0.002,  // llama3-70b-8192
-  small: 0.0002, // llama3-8b-8192
-}
-
-function estimateCostUsd(tokens: number, model: string): number {
-  const rate = model.includes('70b') ? COST_PER_1K.large : COST_PER_1K.small
-  return (tokens / 1000) * rate
-}
+import { estimateCostUsd } from '../../lib/models'
 
 export function TokenSavingsChart() {
   const interactions = useMetricsStore((s) => s.interactions)

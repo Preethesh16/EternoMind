@@ -1,4 +1,5 @@
 import { useChatStore } from '../../stores/chatStore'
+import { modelBadgeClasses } from '../../lib/models'
 
 export function MetricsBar() {
   const messages = useChatStore((s) => s.messages)
@@ -16,8 +17,6 @@ export function MetricsBar() {
       </div>
     )
   }
-
-  const isLargeModel = lastMetrics.model.includes('70b')
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -44,11 +43,8 @@ export function MetricsBar() {
         <div className="bg-gray-900 rounded-lg p-2.5">
           <p className="text-gray-500 text-xs mb-1">Model</p>
           <span
-            className={`inline-block text-xs font-mono font-medium px-2 py-0.5 rounded-full ${
-              isLargeModel
-                ? 'bg-orange-900/50 text-orange-300 border border-orange-700'
-                : 'bg-green-900/50 text-green-300 border border-green-700'
-            }`}
+            className={`inline-block text-xs font-mono font-medium px-2 py-0.5 rounded-full ${modelBadgeClasses(lastMetrics.model)}`}
+            title={lastMetrics.model}
           >
             {lastMetrics.model}
           </span>
