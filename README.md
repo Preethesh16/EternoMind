@@ -35,10 +35,10 @@ Every user message passes through this ordered pipeline:
 
 | Interaction | Tokens Used | Model | Answer Quality |
 |------------|-------------|-------|----------------|
-| 1 | ~15,000 | llama3-70b-8192 | Generic, exploratory |
-| 3 | ~8,400 | llama3-70b-8192 | Contextually aware |
-| 5 | ~3,200 | llama3-8b-8192 | Personalized, efficient |
-| 10 | ~720 | llama3-8b-8192 (cached) | Instant, memory-powered |
+| 1 | ~15,000 | llama-3.3-70b-versatile | Generic, exploratory |
+| 3 | ~8,400 | llama-3.3-70b-versatile | Contextually aware |
+| 5 | ~3,200 | llama-3.1-8b-instant | Personalized, efficient |
+| 10 | ~720 | llama-3.1-8b-instant (cached) | Instant, memory-powered |
 
 This progression is **visible in the UI** via the Token Savings Chart — a live Recharts graph that updates after every interaction.
 

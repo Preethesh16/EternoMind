@@ -112,12 +112,36 @@ class HindsightClient:
             )
 
             memories: list[dict] = []
-            # The SDK returns RecallResponse — convert items to dicts
-            items = getattr(response, "memories", None) or getattr(response, "items", None) or []
-            for idx, item in enumerate(items):
-                content = getattr(item, "content", None) or getattr(item, "text", None) or str(item)
-                score = float(getattr(item, "score", None) or getattr(item, "relevance", 0.7))
-                mem_id = str(getattr(item, "id", None) or getattr(item, "memory_id", idx))
+            # Hindsight returns RecallResponse with `results: List[RecallResult]`.
+            # Each RecallResult has fields: id, text, type, entities, context,
+            # metadata, chunk_id, tags, source_fact_ids (verified via SDK introspection).
+            # The SDK does NOT expose a per-item relevance score, so we treat
+            # everything Hindsight returned as "relevant enough" — the recall API
+            # already filters by relevance internally given max_tokens + budget.
+            results = getattr(response, "results", None) or []
+            # Defensive fallbacks for older/alt SDK versions
+            if not results:
+                results = getattr(response, "memories", None) or getattr(response, "items", None) or []
+
+            # Default score: 0.75 — high enough to clear the 0.65 relevancy threshold
+            # in context_relevancy_node, since Hindsight already filtered by relevance.
+            DEFAULT_SCORE = 0.75
+            for idx, item in enumerate(results):
+                content = (
+                    getattr(item, "text", None)
+                    or getattr(item, "content", None)
+                    or str(item)
+                )
+                score = float(
+                    getattr(item, "score", None)
+                    or getattr(item, "relevance", None)
+                    or DEFAULT_SCORE
+                )
+                mem_id = str(
+                    getattr(item, "id", None)
+                    or getattr(item, "memory_id", None)
+                    or idx
+                )
                 memories.append(
                     {
                         "content": content,
