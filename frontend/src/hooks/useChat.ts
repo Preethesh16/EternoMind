@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react'
-import { streamChat } from '../api/chat'
+import { API_BASE } from '../api/client'
+import type { SSEEvent } from '../api/chat'
 import { useChatStore } from '../stores/chatStore'
 import { useMetricsStore } from '../stores/metricsStore'
 import { useSessionStore } from '../stores/sessionStore'
@@ -10,6 +11,7 @@ export function useChat() {
 
   const sessionId = useSessionStore((s) => s.sessionId)
   const userId = useSessionStore((s) => s.userId)
+  const accessToken = useSessionStore((s) => s.accessToken)
 
   const addUserMessage = useChatStore((s) => s.addUserMessage)
   const startAssistantMessage = useChatStore((s) => s.startAssistantMessage)
@@ -32,41 +34,81 @@ export function useChat() {
       const assistantId = startAssistantMessage()
 
       try {
-        await streamChat(
-          { session_id: sessionId, message: content, user_id: userId },
-          (evt) => {
-            if (evt.event === 'pipeline_step') {
-              setPipelineStep(evt.data.step)
-            } else if (evt.event === 'token') {
-              appendToken(assistantId, evt.token_delta)
-            } else if (evt.event === 'done') {
-              finalizeMessage(assistantId, {
-                total_tokens: evt.data.total_tokens,
-                model: evt.data.model,
-                latency_ms: evt.data.latency_ms,
-                memory_hits: evt.data.memory_hits,
-              })
-              addInteraction({
-                interaction_number: 0, // will be replaced by refreshMetrics
-                token_count_input: evt.data.total_tokens,
-                token_count_output: 0,
-                model_used: evt.data.model,
-                memory_hits: evt.data.memory_hits,
-                latency_ms: evt.data.latency_ms,
-              })
-              void refreshMetrics()
-            } else if (evt.event === 'error') {
-              onError?.(evt.data.message)
-              finalizeMessage(assistantId, {
-                total_tokens: 0,
-                model: '',
-                latency_ms: 0,
-                memory_hits: 0,
-              })
-            }
+        const res = await fetch(`${API_BASE}/api/v1/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-          abortRef.current.signal
-        )
+          body: JSON.stringify({ session_id: sessionId, message: content, user_id: userId }),
+          signal: abortRef.current.signal,
+        })
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: res.statusText }))
+          throw new Error((err as { detail?: string }).detail ?? 'Chat request failed')
+        }
+
+        const reader = res.body!.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const parts = buffer.split('\n\n')
+          buffer = parts.pop() ?? ''
+
+          for (const part of parts) {
+            if (!part.trim()) continue
+            const lines = part.split('\n')
+            let eventName = ''
+            let dataStr = ''
+
+            for (const line of lines) {
+              if (line.startsWith('event:')) eventName = line.slice(6).trim()
+              if (line.startsWith('data:')) dataStr = line.slice(5).trim()
+            }
+
+            if (!eventName || !dataStr) continue
+
+            try {
+              const data = JSON.parse(dataStr) as Record<string, unknown>
+              const evt = { event: eventName, data, token_delta: (data.token_delta as string) ?? '' } as SSEEvent
+
+              if (evt.event === 'pipeline_step') {
+                setPipelineStep((evt.data as { step: string }).step)
+              } else if (evt.event === 'token') {
+                appendToken(assistantId, evt.token_delta)
+              } else if (evt.event === 'done') {
+                const d = evt.data as { total_tokens: number; model: string; latency_ms: number; memory_hits: number }
+                finalizeMessage(assistantId, {
+                  total_tokens: d.total_tokens,
+                  model: d.model,
+                  latency_ms: d.latency_ms,
+                  memory_hits: d.memory_hits,
+                })
+                addInteraction({
+                  interaction_number: 0,
+                  token_count_input: d.total_tokens,
+                  token_count_output: 0,
+                  model_used: d.model,
+                  memory_hits: d.memory_hits,
+                  latency_ms: d.latency_ms,
+                })
+                void refreshMetrics()
+              } else if (evt.event === 'error') {
+                const e = evt.data as { message: string }
+                onError?.(e.message)
+                finalizeMessage(assistantId, { total_tokens: 0, model: '', latency_ms: 0, memory_hits: 0 })
+              }
+            } catch {
+              // malformed event — skip
+            }
+          }
+        }
       } catch (err: unknown) {
         if ((err as Error).name !== 'AbortError') {
           onError?.('Could not connect to EternoMind backend. Retrying...')
@@ -74,7 +116,7 @@ export function useChat() {
         }
       }
     },
-    [sessionId, userId, addUserMessage, startAssistantMessage, appendToken,
+    [sessionId, userId, accessToken, addUserMessage, startAssistantMessage, appendToken,
      finalizeMessage, setPipelineStep, addInteraction, refreshMetrics]
   )
 

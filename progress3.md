@@ -57,3 +57,27 @@ See "Manual Integration Steps" section below.
   - Requires demo user credentials from `seed_demo_user.py`
 
 ---
+
+## [2026-05-18] — Phase 4 Complete
+
+### What was built
+- `LoginScreen.tsx` — full login form with username/password, error handling, auto-creates session on success
+- `App.tsx` updated — shows LoginScreen when not authenticated; shows full app when authenticated
+- Header bar — session ID display, "↺ Reset Session" button (creates new session + clears messages/metrics), "Sign out" button
+- `client.ts` updated — added `getAuthHeaders()` helper
+- `useChat.ts` updated — sends `Authorization: Bearer <token>` header with every chat request
+- `useMetrics.ts` updated — sends auth token when fetching metrics
+
+### What is now working
+- `http://localhost:5173` shows login screen on first load
+- Login with `demo` / `wW0-N87fP5lCJY2o` authenticates and creates a session
+- After login, full two-panel layout appears
+- Reset Session creates a fresh session and clears all messages + chart data
+- Sign out returns to login screen
+- Chat will show "Could not connect" error until Person 2 builds the chat endpoint (expected)
+
+### Next step
+- Phase 5: Docker Compose — blocked on Person 2 (`ai-pipeline`) finishing chat + metrics endpoints
+- Phase 6: Demo polish — after full stack works end-to-end
+
+---
