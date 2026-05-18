@@ -15,5 +15,6 @@ langchain==0.2.5
 langgraph==0.1.5
 langchain-groq==0.1.5
 groq==0.9.0
-chromadb==0.5.0
+chromadb>=1.5.9
 hindsight-client
+cascadeflow

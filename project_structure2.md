@@ -52,9 +52,9 @@ EternoMind is a Self-Optimizing Memory-Aware AI Runtime. Memory IS the token opt
 | Groq Integration | langchain-groq | 0.1.5 |
 | Groq SDK | groq | 0.9.0 |
 | Persistent Memory | Hindsight SDK (hindsight-client) | latest |
-| Vector Store | ChromaDB | 0.5.0 |
-| Model Routing | cascadeflow | latest |
-| LLM Inference | Groq (llama3-70b-8192 / llama3-8b-8192) | — |
+| Vector Store | ChromaDB | >=1.5.9 (was 0.5.0 — incompatible with Python 3.14) |
+| Model Routing | cascadeflow | latest (open-source, NO API KEY) |
+| LLM Inference | Groq (llama-3.3-70b-versatile / llama-3.1-8b-instant) | — |
 
 ---
 
@@ -141,12 +141,12 @@ data: {"total_tokens": 720, "model": "llama3-8b-8192", "latency_ms": 340.5, "mem
 
 ## Phase Completion
 
-- ✅ **Phase 1** — Hindsight Memory Integration
-- ✅ **Phase 2** — ChromaDB RAG
-- ✅ **Phase 3** — Prompt Optimizer & cascadeflow Router
-- [ ] **Phase 4** — LangGraph State Machine
-- [ ] **Phase 5** — Chat & Metrics API Endpoints
-- [ ] **Phase 6** — Token Reduction Validation
+- ✅ **Phase 1** — Hindsight Memory Integration *(fixed by P1: per-user banks, async API)*
+- ✅ **Phase 2** — ChromaDB RAG *(upgraded to chromadb 1.5.9, embedded mode)*
+- ✅ **Phase 3** — Prompt Optimizer & cascadeflow Router *(rule-based fallback)*
+- ✅ **Phase 4** — LangGraph State Machine *(verified end-to-end by P1)*
+- ✅ **Phase 5** — Chat & Metrics API Endpoints *(SSE stream working)*
+- [ ] **Phase 6** — Token Reduction Validation *(pending — run `run_10_interactions.py`)*
 
 ---
 
@@ -168,9 +168,9 @@ data: {"total_tokens": 720, "model": "llama3-8b-8192", "latency_ms": 340.5, "mem
 
 ### 1. API Keys (add to `.env`)
 ```dotenv
-GROQ_API_KEY=<your-key-from-console.groq.com>
-HINDSIGHT_API_KEY=<your-key-from-hindsight.so>
-CASCADEFLOW_API_KEY=<your-key-from-cascadeflow.ai>
+GROQ_API_KEY=<your-key-from-console.groq.com>           # required
+HINDSIGHT_API_KEY=<your-key-from-hindsight.vectorize.io> # required
+CASCADEFLOW_API_KEY=                                     # NOT NEEDED — open-source library
 ```
 
 ### 2. Install New Dependencies
@@ -179,24 +179,33 @@ cd backend
 pip install -r requirements.txt
 ```
 
-### 3. Start ChromaDB
-ChromaDB must be running before the pipeline starts. Options:
-```bash
-# Option A — Docker (recommended)
-docker run -p 8001:8000 chromadb/chroma:latest
+### 3. ChromaDB — embedded mode (default, recommended)
+No setup needed. ChromaDB will create `./chroma_data/` automatically on first run.
 
-# Option B — pip install (local dev)
-pip install chromadb
-chroma run --host localhost --port 8001
+To use HTTP mode instead (Docker/production):
+```bash
+# In .env: CHROMA_USE_HTTP=true
+docker run -p 8001:8000 chromadb/chroma:latest
 ```
 
-### 4. Seed RAG Documents
+### 4. Redis
+On Arch Linux, install natively (Docker port forwarding may not work):
+```bash
+sudo pacman -S redis
+redis-server --port 6379 &
+```
+On other systems:
+```bash
+docker run -d -p 6379:6379 redis:7-alpine
+```
+
+### 5. Seed RAG Documents
 ```bash
 cd backend
 python scripts/ingest_demo_docs.py
 ```
 
-### 5. Start the Backend
+### 6. Start the Backend
 ```bash
 cd backend
 uvicorn app.main:app --reload

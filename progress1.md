@@ -124,3 +124,48 @@ See `project_structure1.md` → "Manual Integration Steps Required" section:
 | Person 3 | 3/6 | Phase 4 (real-backend wire), 5 (Docker), 6 (polish) |
 
 ---
+
+## [2026-05-18] — End-to-End Integration Testing & Bug Hunt
+
+### What I did (beyond Person 1's scope, but blocking the demo)
+Spun up the full stack locally and tested the chat pipeline end-to-end. Found and fixed 4 critical bugs in Person 2's code that were preventing the demo from working.
+
+### Infrastructure setup
+- Pulled main with Person 2 + Person 3's latest code
+- Tried running Redis + ChromaDB via Docker — **Docker port forwarding broken on this Arch box**: containers run fine internally but TCP connections from host immediately reset (`Connection reset by peer`). Confirmed via raw socket test.
+- **Solution: skip Docker for these services**:
+  - Redis → installed natively via `pacman -S redis` (actually installs Valkey, the Redis fork)
+  - ChromaDB → switched code to embedded `PersistentClient` mode (`./chroma_data/` directory)
+  - Both work perfectly without Docker
+
+### Bugs fixed in Person 2's code
+1. **`backend/requirements.txt`**: bumped `chromadb==0.5.0` → `chromadb>=1.5.9` (old version incompatible with Python 3.14)
+2. **`backend/app/rag/chroma_client.py`**: rewrote to support both embedded (default) + HTTP modes via `CHROMA_USE_HTTP` env flag
+3. **`backend/app/memory/hindsight_client.py`**: full rewrite
+   - Wrong: `recall(user_id=...)` and `retain(user_id=...)` — those params don't exist in the SDK
+   - Right: per-user memory banks (`eternomind-{user_id}`), `arecall()` / `aretain()` / `acreate_bank()` async variants
+4. **`backend/.env`**: updated `GROQ_LARGE_MODEL` and `GROQ_SMALL_MODEL` to current Groq models (old ones decommissioned)
+
+### Verified working end-to-end
+- ✅ POST `/api/v1/chat` with full SSE pipeline (8 steps)
+- ✅ Groq calls return real responses
+- ✅ Hindsight bank creation + arecall + aretain (no errors)
+- ✅ ChromaDB embedded retrieval
+- ✅ `interaction_logs` table written
+- ✅ GET `/api/v1/metrics/{session_id}` returns interaction history
+
+### Updated docs
+- `progress2.md` — added bug list with action items for Person 2
+- `project_structure2.md` — updated tech stack, manual steps, model names
+- `progress1.md` — this entry
+- `TEAM_NOTES.md` — full summary for the team
+
+### What's left for the team
+
+| Person | Remaining work |
+|--------|---------------|
+| **Person 1 (me)** | 0 phases. Done. |
+| **Person 2** | Phase 6 only — run `scripts/run_10_interactions.py` to validate token reduction. Optional: rewrite `cascadeflow_router.py` using real cascadeflow SDK. |
+| **Person 3** | Phase 5 (Docker Compose) and Phase 6 (demo polish). Backend is now fully functional locally — they can wire the frontend to it immediately. |
+
+---

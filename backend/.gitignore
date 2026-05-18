@@ -12,6 +12,9 @@ env/
 
 # Environment
 .env
+env
+*.env
+!.env.example
 
 # Alembic
 # (keep migrations/ but not compiled cache — already covered above)
@@ -19,3 +22,6 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# ChromaDB embedded data
+chroma_data/
