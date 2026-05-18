@@ -9,3 +9,11 @@ redis==5.0.4
 python-multipart==0.0.9
 httpx==0.27.0
 pytest==8.2.2
+
+# ── Person 2: AI/Agent Pipeline ──────────────────────────────────────────────
+langchain==0.2.5
+langgraph==0.1.5
+langchain-groq==0.1.5
+groq==0.9.0
+chromadb==0.5.0
+hindsight-client

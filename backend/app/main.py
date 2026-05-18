@@ -54,8 +54,9 @@ app.include_router(health_router.router)
 app.include_router(auth_router.router)
 app.include_router(sessions_router.router)
 
-# Person 2 will add these routers once their branch is merged:
-# from app.api import chat as chat_router
-# from app.api import metrics as metrics_router
-# app.include_router(chat_router.router)
-# app.include_router(metrics_router.router)
+# Person 2: AI pipeline endpoints
+from app.api import chat as chat_router
+from app.api import metrics as metrics_router
+
+app.include_router(chat_router.router)
+app.include_router(metrics_router.router)
