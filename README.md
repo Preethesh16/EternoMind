@@ -231,7 +231,7 @@ Each developer works exclusively on their own branch. Open a PR to `main` only w
 
 ## Demo Instructions (for judges)
 
-1. Open `http://localhost:5173`
+1. Open link
 2. Log in with the demo credentials from `.env.example`
 3. Ask: _"Explain how transformer attention mechanisms work"_ → watch token count (~15,000)
 4. Ask 9 more related questions on the same topic
