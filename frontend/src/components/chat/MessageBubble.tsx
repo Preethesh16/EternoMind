@@ -8,14 +8,12 @@ export function MessageBubble({ message }: Props) {
   const isUser = message.role === 'user'
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-5`}>
+      <div className={`max-w-[82%] ${isUser ? 'order-2' : 'order-1'}`}>
         {/* Bubble */}
         <div
-          className={`rounded-2xl px-4 py-3 ${
-            isUser
-              ? 'bg-indigo-600 text-white rounded-tr-sm'
-              : 'bg-gray-800 text-gray-100 rounded-tl-sm'
+          className={`rounded-2xl px-5 py-3.5 ${
+            isUser ? 'bubble-user rounded-tr-sm' : 'bubble-assistant rounded-tl-sm'
           }`}
         >
           <StreamingText content={message.content} isStreaming={message.isStreaming} />
@@ -23,44 +21,45 @@ export function MessageBubble({ message }: Props) {
 
         {/* Metrics bar — only for assistant, only after streaming done */}
         {!isUser && !message.isStreaming && message.metrics && (
-          <div className="mt-2 space-y-1.5">
+          <div className="mt-2.5 space-y-2 fade-in">
             {/* Primary metrics */}
-            <div className="flex items-center gap-3 px-1 text-xs text-gray-500">
-              <span className="font-mono">
+            <div className="flex items-center gap-2.5 px-1 text-[11px]">
+              <span className="font-mono text-[#A8B4CC]">
                 {message.metrics.total_tokens.toLocaleString()} tokens
               </span>
-              <span>·</span>
+              <span className="text-[#434655]">•</span>
               <span
-                className={`font-mono font-medium ${modelBadgeTextClasses(message.metrics.model)}`}
+                className={`font-mono font-semibold ${modelBadgeTextClasses(message.metrics.model)}`}
                 title={message.metrics.model}
               >
-                {message.metrics.model}
+                {message.metrics.model.length > 30
+                  ? message.metrics.model.slice(0, 30) + '…'
+                  : message.metrics.model}
               </span>
-              <span>·</span>
-              <span className="font-mono">{message.metrics.latency_ms.toFixed(0)} ms</span>
-              <span>·</span>
-              <span className="font-mono">{message.metrics.memory_hits} memories</span>
+              <span className="text-[#434655]">•</span>
+              <span className="font-mono text-[#A8B4CC]">{message.metrics.latency_ms.toFixed(0)} ms</span>
+              <span className="text-[#434655]">•</span>
+              <span className="font-mono text-[#A8B4CC]">{message.metrics.memory_hits} memories</span>
             </div>
 
-            {/* Secondary metrics: Complexity, Goal, and Safety */}
+            {/* Secondary metrics: Complexity, Goal, Safety */}
             {(message.metrics.complexity_score || message.metrics.prompt_goal || message.metrics.safety_score !== undefined) && (
               <div className="flex flex-col gap-1.5 px-1">
-                {/* Complexity and Safety on same line */}
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 text-[11px] flex-wrap">
                   {message.metrics.complexity_score && (
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="text-gray-500">Complexity:</span>
+                      <span className="text-[#7BA8E8] uppercase tracking-wider text-[9px] font-semibold">Complexity</span>
                       <span
-                        className={`font-mono font-medium px-2 py-0.5 rounded ${
+                        className={`font-mono font-medium px-2 py-0.5 rounded-full border ${
                           message.metrics.complexity_score === 1
-                            ? 'bg-green-900/30 text-green-300'
+                            ? 'bg-green-900/20 text-green-300 border-green-700/40'
                             : message.metrics.complexity_score === 2
-                              ? 'bg-blue-900/30 text-blue-300'
+                              ? 'bg-blue-900/20 text-blue-300 border-blue-700/40'
                               : message.metrics.complexity_score === 3
-                                ? 'bg-yellow-900/30 text-yellow-300'
+                                ? 'bg-yellow-900/20 text-yellow-300 border-yellow-700/40'
                                 : message.metrics.complexity_score === 4
-                                  ? 'bg-orange-900/30 text-orange-300'
-                                  : 'bg-red-900/30 text-red-300'
+                                  ? 'bg-orange-900/20 text-orange-300 border-orange-700/40'
+                                  : 'bg-red-900/20 text-red-300 border-red-700/40'
                         }`}
                         title={`Complexity Level ${message.metrics.complexity_score}`}
                       >
@@ -76,34 +75,33 @@ export function MessageBubble({ message }: Props) {
                       </span>
                     </span>
                   )}
-                  
+
                   {message.metrics.safety_score !== undefined && (
-                    <>
-                      {message.metrics.complexity_score && <span className="text-gray-600">·</span>}
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="text-gray-500">Safety:</span>
-                        <span
-                          className={`font-mono font-medium px-2 py-0.5 rounded ${
-                            message.metrics.safety_score >= 80
-                              ? 'bg-green-900/30 text-green-300'
-                              : message.metrics.safety_score >= 60
-                                ? 'bg-blue-900/30 text-blue-300'
-                                : message.metrics.safety_score >= 40
-                                  ? 'bg-yellow-900/30 text-yellow-300'
-                                  : 'bg-red-900/30 text-red-300'
-                          }`}
-                          title={`Safety Score: ${message.metrics.safety_score}/100`}
-                        >
-                          {message.metrics.safety_score}%
-                        </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="text-[#7BA8E8] uppercase tracking-wider text-[9px] font-semibold">Safety</span>
+                      <span
+                        className={`font-mono font-medium px-2 py-0.5 rounded-full border ${
+                          message.metrics.safety_score >= 80
+                            ? 'bg-green-900/20 text-green-300 border-green-700/40'
+                            : message.metrics.safety_score >= 60
+                              ? 'bg-blue-900/20 text-blue-300 border-blue-700/40'
+                              : message.metrics.safety_score >= 40
+                                ? 'bg-yellow-900/20 text-yellow-300 border-yellow-700/40'
+                                : 'bg-red-900/20 text-red-300 border-red-700/40'
+                        }`}
+                        title={`Safety Score: ${message.metrics.safety_score}/100`}
+                      >
+                        {message.metrics.safety_score}%
                       </span>
-                    </>
+                    </span>
                   )}
                 </div>
 
-                {/* Prompt Goal on separate line */}
                 {message.metrics.prompt_goal && (
-                  <span className="text-gray-400 italic text-xs">Goal: {message.metrics.prompt_goal}</span>
+                  <span className="text-[#94A3B8] italic text-[11px] leading-snug">
+                    <span className="text-[#7BA8E8] not-italic uppercase tracking-wider text-[9px] font-semibold mr-1.5">Goal</span>
+                    {message.metrics.prompt_goal}
+                  </span>
                 )}
               </div>
             )}

@@ -10,16 +10,16 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useMetricsStore } from '../../stores/metricsStore'
-import { estimateCostUsd, isLargeModel, isSmallModel } from '../../lib/models'
+import { estimateCostUsd } from '../../lib/models'
 
 export function TokenSavingsChart() {
   const interactions = useMetricsStore((s) => s.interactions)
 
   if (interactions.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <h3 className="text-white font-medium text-sm mb-2">Token Savings</h3>
-        <div className="flex items-center justify-center h-28 text-gray-500 text-xs">
+      <div className="chat-card p-4">
+        <h3 className="display-font text-[#d7e3fc] font-bold text-sm mb-2 tracking-tight">Token Savings</h3>
+        <div className="flex items-center justify-center h-28 text-[#A8B4CC] text-xs">
           Send your first message to start tracking token savings
         </div>
       </div>
@@ -36,9 +36,7 @@ export function TokenSavingsChart() {
 
   // Get the last message to check if estimated_cost is available from real-time metrics
   const lastMessageWithMetrics = [...useMetricsStore.getState()?.interactions || []]?.at(-1)
-  const lastRealTimeCost = lastMessageWithMetrics?.estimated_cost ?? null
   const lastModel = lastMessageWithMetrics?.model_used || 'llama-3.1-8b-instant'
-  const lastComplexity = lastMessageWithMetrics?.complexity_score || 3
 
   // List of available models
   const availableModels = [
@@ -64,20 +62,20 @@ export function TokenSavingsChart() {
   const hasUnsafeInput = unsafeInteractions.length > 0
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="chat-card p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-white font-medium text-sm">Token Savings & Cost Analysis</h3>
-          <p className="text-gray-400 text-xs mt-1">Tracks input/output tokens and estimated cost per interaction</p>
+          <h3 className="display-font text-[#d7e3fc] font-bold text-sm tracking-tight">Token Savings & Cost Analysis</h3>
+          <p className="text-[#A8B4CC] text-xs mt-1">Tracks input/output tokens and estimated cost per interaction</p>
         </div>
         <div className="flex items-center gap-2">
           {interactions.length >= 2 && reduction > 0 && (
-            <span className="text-green-400 text-xs font-mono">
+            <span className="text-emerald-400 text-xs font-mono font-semibold">
               {reduction}% reduction
             </span>
           )}
           {totalSaved > 0 && (
-            <span className="bg-emerald-900/50 text-emerald-300 border border-emerald-700 text-xs font-mono px-2 py-0.5 rounded-full">
+            <span className="bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 text-xs font-mono px-2.5 py-0.5 rounded-full">
               Saved ${totalSaved < 0.01 ? totalSaved.toFixed(5) : totalSaved.toFixed(4)}
             </span>
           )}
@@ -145,7 +143,7 @@ export function TokenSavingsChart() {
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={180}>
+      <ResponsiveContainer width="100%" height={150}>
         <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis

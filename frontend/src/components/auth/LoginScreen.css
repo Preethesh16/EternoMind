@@ -1,0 +1,32 @@
+:root {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+.bg-cinematic {
+  background-color: #020617;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(5, 12, 31, 1) 0%, transparent 50%);
+  position: relative;
+  overflow: hidden;
+}
+.cursor-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    900px circle at var(--mouse-x) var(--mouse-y),
+    rgba(59, 130, 246, 0.25),
+    rgba(26, 79, 216, 0.08) 30%,
+    transparent 80%
+  );
+  transition: opacity 0.2s ease;
+  will-change: transform;
+}
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+.shadow-inner-glow {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}

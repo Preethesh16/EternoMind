@@ -13,9 +13,9 @@ export function MetricsBar() {
 
   if (!lastMetrics) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <h3 className="text-white font-medium text-sm mb-2">Last Response Metrics</h3>
-        <p className="text-gray-500 text-xs">Waiting for first response…</p>
+      <div className="chat-card p-4">
+        <h3 className="display-font text-[#d7e3fc] font-bold text-sm mb-2 tracking-tight">Last Response Metrics</h3>
+        <p className="text-[#A8B4CC] text-xs">Waiting for first response…</p>
       </div>
     )
   }
@@ -25,13 +25,13 @@ export function MetricsBar() {
   const userQuery = lastAssistantIdx > 0 ? messages[lastAssistantIdx - 1].content : ''
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="chat-card p-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-white font-medium text-sm">Last Response Metrics</h3>
+        <h3 className="display-font text-[#d7e3fc] font-bold text-sm tracking-tight">Last Response Metrics</h3>
         {lastMetrics.optimized_prompt && (
           <button 
             onClick={() => setShowPrompt(true)}
-            className="text-[10px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 rounded px-1.5 py-0.5 transition-colors"
+            className="text-[10px] text-[#7BA8E8] hover:text-[#4D9EFF] border border-[#1E3A6E] hover:border-[#4D9EFF] rounded-full px-2.5 py-1 transition-colors"
           >
             View Optimized Prompt
           </button>

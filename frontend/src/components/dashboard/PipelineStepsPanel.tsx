@@ -80,8 +80,8 @@ export function PipelineStepsPanel() {
     : -1
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-white font-medium text-sm mb-3">Pipeline Steps</h3>
+    <div className="chat-card p-4">
+      <h3 className="display-font text-[#d7e3fc] font-bold text-sm mb-3 tracking-tight">Pipeline Steps</h3>
       <div className="flex flex-col gap-1.5">
         {PIPELINE_STEPS.map((step, idx) => {
           const isDone = isLoading && idx < activeIndex
@@ -92,36 +92,36 @@ export function PipelineStepsPanel() {
           const timing = stepTimingsRef.current[step]?.duration
 
           return (
-            <div key={step} className="flex items-center gap-2">
+            <div key={step} className="flex items-center gap-2.5">
               <div
                 className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   isRunning
-                    ? 'bg-blue-400 animate-pulse'
+                    ? 'bg-[#4D9EFF] pulse-glow'
                     : isDone || isCompleted
-                    ? 'bg-green-400'
-                    : 'bg-gray-600'
+                    ? 'bg-emerald-400'
+                    : 'bg-[#152050]'
                 }`}
               />
               <span
                 className={`text-xs ${
                   isRunning
-                    ? 'text-blue-300 font-medium'
+                    ? 'text-[#7BA8E8] font-semibold'
                     : isDone || isCompleted
-                    ? 'text-green-400'
+                    ? 'text-emerald-400'
                     : isIdle
-                    ? 'text-gray-500'
-                    : 'text-gray-400'
+                    ? 'text-[#484F58]'
+                    : 'text-[#A8B4CC]'
                 }`}
               >
                 {STEP_LABELS[step]}
               </span>
               {(isDone || isCompleted) && timing !== undefined && (
-                <span className="ml-auto text-gray-500 text-[10px] font-mono">
+                <span className="ml-auto text-[#A8B4CC] text-[10px] font-mono">
                   {timing < 1000 ? `${Math.round(timing)}ms` : `${(timing / 1000).toFixed(2)}s`}
                 </span>
               )}
               {(isDone || isCompleted) && timing === undefined && (
-                <span className="ml-auto text-green-500 text-xs">✓</span>
+                <span className="ml-auto text-emerald-400 text-xs">✓</span>
               )}
             </div>
           )
