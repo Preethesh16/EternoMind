@@ -122,7 +122,7 @@ Benefits:
 
 **Compression Modes:**
 - **Normal** (< 5 memories): Include full memory text (~300 chars each)
-- **Aggressive** (≥ 5 memories): Truncate to ~120 chars (one-line summaries)
+- **Aggressive** (≥ 5 memories): Surgical snippets (up to 120 chars, word-boundary safe truncation)
 
 ### The Router (Step 7)
 
@@ -131,14 +131,16 @@ Benefits:
 **Routing Decision:**
 ```python
 if memory_hits >= 4 AND token_estimate < 2000:
-    select llama-3.1-8b-instant    # Small model (fast, cheap)
+    # 🔄 SWITCHING TO SMALL MODEL: High memory coverage and low tokens
+    select llama-3.1-8b-instant    
 else:
-    select llama-3.3-70b-versatile  # Large model (powerful, slow)
+    # ⚡ USING LARGE MODEL: Task requires high reasoning
+    select llama-3.3-70b-versatile  
 ```
 
 **Models:**
-- `llama-3.3-70b-versatile`: 70 billion parameters, for complex reasoning
-- `llama-3.1-8b-instant`: 8 billion parameters, for simple tasks
+- `llama-3.3-70b-versatile`: Large model for complex reasoning
+- `llama-3.1-8b-instant`: Small model for simple tasks
 
 ---
 
@@ -146,10 +148,10 @@ else:
 
 ### Per-Request Savings
 ```
-Advanced Example: 46.4% token reduction
-- Without optimization: 360 tokens
-- With optimization:    193 tokens
-- Savings:             167 tokens per request
+Advanced Example: 48.8% token reduction
+- Without optimization: 449 tokens
+- With optimization:    230 tokens
+- Savings:             219 tokens per request (48.8%)
 ```
 
 ### Cost Analysis (based on Groq API pricing)

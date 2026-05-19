@@ -5,6 +5,9 @@ export interface MessageMetrics {
   model: string
   latency_ms: number
   memory_hits: number
+  optimized_prompt?: string
+  prompt_goal?: string
+  token_estimate?: number
 }
 
 export interface Message {

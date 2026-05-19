@@ -148,6 +148,9 @@ async def chat(
                 "latency_ms": round((time.time() - pipeline_start) * 1000, 1),
                 "memory_hits": final_state.get("memory_hits", 0),
                 "response_text": final_state.get("response_text", ""),
+                "optimized_prompt": final_state.get("optimized_prompt", ""),
+                "prompt_goal": final_state.get("prompt_goal", ""),
+                "token_estimate": final_state.get("token_estimate", 0),
             },
         )
 

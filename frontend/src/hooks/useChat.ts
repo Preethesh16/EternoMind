@@ -91,7 +91,16 @@ export function useChat() {
               } else if (evt.event === 'token') {
                 appendToken(assistantId, evt.token_delta)
               } else if (evt.event === 'done') {
-                const d = evt.data as { total_tokens: number; model: string; latency_ms: number; memory_hits: number; response_text?: string }
+                const d = evt.data as { 
+                  total_tokens: number; 
+                  model: string; 
+                  latency_ms: number; 
+                  memory_hits: number; 
+                  response_text?: string;
+                  optimized_prompt?: string;
+                  prompt_goal?: string;
+                  token_estimate?: number;
+                }
                 // If the message bubble is empty (no token events arrived),
                 // fall back to displaying the full response_text from `done`.
                 // This covers the case where the backend streams metadata but
@@ -107,6 +116,9 @@ export function useChat() {
                   model: d.model,
                   latency_ms: d.latency_ms,
                   memory_hits: d.memory_hits,
+                  optimized_prompt: d.optimized_prompt,
+                  prompt_goal: d.prompt_goal,
+                  token_estimate: d.token_estimate,
                 })
                 addInteraction({
                   interaction_number: 0,

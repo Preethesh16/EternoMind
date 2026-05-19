@@ -119,33 +119,36 @@ class CascadeflowRouter:
             token_estimate: Estimated token count of the optimized prompt.
 
         Returns:
-            Groq model name string (e.g. "llama-3.1-8b-instant" or "llama-3.3-70b-versatile").
+            Groq model name string.
         """
-        # Initialize the SDK lazily on first call. This sets self._sdk_available
-        # and registers the harness so any Groq calls made later in the pipeline
-        # are tracked by cascadeflow's observability.
         self._try_init_sdk()
 
-        # The routing decision itself remains rule-based — that's the fast path
-        # cascadeflow's CascadeAgent.run() is for execution-time fallback, not
-        # pre-execution routing. The harness still observes the call.
-        model = self._rule_based_route(memory_hits, token_estimate)
+        # SWITCHING LOGIC:
+        # We switch to the SMALL model only if we have high memory coverage (high confidence)
+        # AND the prompt is small enough to fit in its context efficiently.
+        # Otherwise, we default to the LARGE model for higher reasoning quality.
+        
+        use_small = memory_hits >= 4 and token_estimate < 2000
+        selected_model = settings.groq_small_model if use_small else settings.groq_large_model
 
-        if self._sdk_available:
+        if use_small:
             logger.info(
-                "[cascadeflow] route → %s (hits=%d tokens≈%d, harness=observe)",
-                model,
-                memory_hits,
-                token_estimate,
+                "🔄 SWITCHING TO SMALL MODEL: High memory coverage (%d hits) and low tokens (%d)",
+                memory_hits, token_estimate
             )
         else:
             logger.info(
-                "[cascadeflow] rule-based route → %s (hits=%d tokens≈%d)",
-                model,
-                memory_hits,
-                token_estimate,
+                "⚡ USING LARGE MODEL: Task requires high reasoning (hits=%d, tokens=%d)",
+                memory_hits, token_estimate
             )
-        return model
+
+        if self._sdk_available:
+            logger.info(
+                "[cascadeflow] routed to %s (harness=observe)",
+                selected_model
+            )
+        
+        return selected_model
 
 
 # Module-level singleton
