@@ -20,16 +20,30 @@ export function isSmallModel(model: string): boolean {
   return SMALL_MODEL_PATTERNS.some((p) => lower.includes(p)) && !isLargeModel(model)
 }
 
-// Groq public pricing per 1,000 tokens (USD) — approximate for blended in/out
-// llama-3.3-70b-versatile ≈ $0.59 / 1M tokens input, $0.79 / 1M tokens output
-// llama-3.1-8b-instant   ≈ $0.05 / 1M tokens input, $0.08 / 1M tokens output
-// We use blended estimates for simplicity in the demo.
+// Groq public pricing per 1,000,000 tokens (USD) as of May 2026
+// llama-3.3-70b-versatile: $0.59 input, $0.79 output → average $0.69
+// llama-3.1-8b-instant: $0.05 input, $0.08 output → average $0.065
+const GROQ_PRICING = {
+  'llama-3.1-8b-instant': { input: 0.05, output: 0.08 },
+  'llama-3.3-70b-versatile': { input: 0.59, output: 0.79 },
+  'llama-3.1-70b-versatile': { input: 0.59, output: 0.79 },
+  'llama-3.2-90b-vision-preview': { input: 0.50, output: 0.50 },
+}
+
 const COST_PER_1K_USD = {
-  large: 0.0007, // ~$0.70 per 1M
-  small: 0.00007, // ~$0.07 per 1M
+  large: 0.00069, // $0.69 per 1M = $0.00069 per 1K (70b average)
+  small: 0.0000065, // $0.065 per 1M = $0.0000065 per 1K (8b average)
 }
 
 export function estimateCostUsd(tokens: number, model: string): number {
+  // Try exact model match first
+  const pricing = GROQ_PRICING[model as keyof typeof GROQ_PRICING]
+  if (pricing) {
+    const avgCostPerMillion = (pricing.input + pricing.output) / 2
+    return (tokens / 1_000_000) * avgCostPerMillion
+  }
+  
+  // Fall back to pattern matching
   const rate = isLargeModel(model) ? COST_PER_1K_USD.large : COST_PER_1K_USD.small
   return (tokens / 1000) * rate
 }
@@ -44,4 +58,12 @@ export function modelBadgeClasses(model: string): string {
 
 export function modelBadgeTextClasses(model: string): string {
   return isLargeModel(model) ? 'text-orange-400' : 'text-green-400'
+}
+
+export function formatCost(cost: number): string {
+  if (cost === 0) return '$0.00'
+  if (cost < 0.0001) return `$${cost.toFixed(6)}`
+  if (cost < 0.01) return `$${cost.toFixed(5)}`
+  if (cost < 0.1) return `$${cost.toFixed(4)}`
+  return `$${cost.toFixed(2)}`
 }

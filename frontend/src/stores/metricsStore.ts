@@ -7,6 +7,9 @@ export interface Interaction {
   model_used: string
   memory_hits: number
   latency_ms: number
+  safety_score?: number  // 0-100, where 100 is safe
+  complexity_score?: number  // 1-5
+  estimated_cost?: number  // Cost in USD
 }
 
 interface MetricsState {

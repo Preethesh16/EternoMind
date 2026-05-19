@@ -40,8 +40,42 @@ class Settings(BaseSettings):
     cascadeflow_api_key: str = ""
 
     # ── Model Names ──────────────────────────────────────────
-    groq_large_model: str = "llama-3.3-70b-versatile"
-    groq_small_model: str = "llama-3.1-8b-instant"
+    # 4 available Groq models with different specializations
+    groq_model_small: str = "llama-3.1-8b-instant"            # Small (Fast) - 8B params
+    groq_model_large: str = "llama-3.3-70b-versatile"         # Large (Accurate) - 70B params
+    groq_model_expert: str = "mixtral-8x7b-32768"             # Expert (Specialized) - MoE 56B
+    groq_model_vision: str = "llama-3.3-70b-versatile"        # Vision - fallback to Large (3.2-90b-vision deprecated)
+    
+    # Model routing by complexity level (1-5)
+    groq_model_very_simple: str = "llama-3.1-8b-instant"      # Level 1: Factual/simple → Small
+    groq_model_simple: str = "llama-3.1-8b-instant"           # Level 2: Light reasoning → Small
+    groq_model_medium: str = "llama-3.3-70b-versatile"        # Level 3: Standard reasoning → Large
+    groq_model_complex: str = "mixtral-8x7b-32768"            # Level 4: Complex/specialized → Expert
+    groq_model_very_complex: str = "llama-3.3-70b-versatile"  # Level 5: Very complex/creative → Large
+    
+    # Legacy aliases for backward compatibility
+    @property
+    def groq_small_model(self) -> str:
+        """Backward compat: SMALL = level 1 (very simple)"""
+        return self.groq_model_very_simple
+    
+    @property
+    def groq_large_model(self) -> str:
+        """Backward compat: LARGE = level 5 (very complex)"""
+        return self.groq_model_very_complex
+    
+    def get_model_for_complexity(self, complexity_level: int) -> str:
+        """Get the model name for a given complexity level (1-5)."""
+        if complexity_level <= 1:
+            return self.groq_model_very_simple
+        elif complexity_level == 2:
+            return self.groq_model_simple
+        elif complexity_level == 3:
+            return self.groq_model_medium
+        elif complexity_level == 4:
+            return self.groq_model_complex
+        else:  # 5+
+            return self.groq_model_very_complex
 
     # ── CORS ─────────────────────────────────────────────────
     cors_origins: str = "http://localhost:5173"

@@ -53,6 +53,7 @@ async def run_pipeline(
     message: str,
     user_id: str,
     event_callback: EventCallback,
+    safety_score: int = 50,
 ) -> AgentState:
     """Execute the full EternoMind AI pipeline for one user message."""
     start_ms = time.time() * 1000
@@ -61,6 +62,7 @@ async def run_pipeline(
         "session_id": session_id,
         "user_id": user_id,
         "original_query": message,
+        "safety_score": safety_score,
         "retrieved_memories": [],
         "relevant_memories": [],
         "memory_hits": 0,
@@ -68,7 +70,7 @@ async def run_pipeline(
         "optimized_prompt": "",
         "token_estimate": 0,
         "prompt_goal": "",
-        "complexity_score": 1,
+        "complexity_score": 3,
         "selected_model": "",
         "response_text": "",
         "token_count_input": 0,

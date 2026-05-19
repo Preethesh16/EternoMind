@@ -7,8 +7,10 @@ export interface MessageMetrics {
   memory_hits: number
   optimized_prompt?: string
   prompt_goal?: string
-  complexity_score?: number
+  complexity_score?: number  // 1-5 scale
   token_estimate?: number
+  safety_score?: number  // 0-100 scale
+  estimated_cost?: number  // Cost in USD
 }
 
 export interface Message {

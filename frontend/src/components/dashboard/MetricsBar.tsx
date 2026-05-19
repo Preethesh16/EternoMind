@@ -89,25 +89,57 @@ export function MetricsBar() {
                 lastMetrics.complexity_score === 1
                   ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                   : lastMetrics.complexity_score === 2
-                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
-                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : lastMetrics.complexity_score === 3
+                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                      : lastMetrics.complexity_score === 4
+                        ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
               }`}
-              title={`Complexity Level ${lastMetrics.complexity_score}`}
+              title={`Complexity Level ${lastMetrics.complexity_score}/5`}
             >
               {lastMetrics.complexity_score === 1
-                ? 'Simple'
+                ? 'Very Simple'
                 : lastMetrics.complexity_score === 2
-                  ? 'Medium'
-                  : 'Complex'}
+                  ? 'Simple'
+                  : lastMetrics.complexity_score === 3
+                    ? 'Medium'
+                    : lastMetrics.complexity_score === 4
+                      ? 'Complex'
+                      : 'Very Complex'}
             </span>
           </div>
         )}
 
-        {/* Prompt Goal */}
-        {lastMetrics.prompt_goal && (
-          <div className="bg-gray-900 rounded-lg p-2.5 col-span-2">
-            <p className="text-gray-500 text-[10px] mb-1 uppercase tracking-wider">Prompt Goal</p>
-            <p className="text-gray-300 text-xs italic line-clamp-2">{lastMetrics.prompt_goal}</p>
+        {/* Safety Score */}
+        {lastMetrics.safety_score !== undefined && (
+          <div className="bg-gray-900 rounded-lg p-2.5">
+            <p className="text-gray-500 text-[10px] mb-1 uppercase tracking-wider">Input Safety</p>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-block text-[10px] font-mono font-medium px-2 py-0.5 rounded-full ${
+                  lastMetrics.safety_score >= 80
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                    : lastMetrics.safety_score >= 60
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      : lastMetrics.safety_score >= 40
+                        ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                }`}
+                title="Input safety score (0-100)"
+              >
+                {lastMetrics.safety_score}%
+              </span>
+              <span className="text-[9px] text-gray-500">
+                {lastMetrics.safety_score >= 80
+                  ? 'Safe'
+                  : lastMetrics.safety_score >= 60
+                    ? 'Good'
+                    : lastMetrics.safety_score >= 40
+                      ? 'Caution'
+                      : 'Alert'}
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -140,26 +172,58 @@ export function MetricsBar() {
 
                 <div>
                   <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Task Complexity</span>
-                  <div className="bg-gray-800 p-2 rounded border border-gray-700 flex items-center gap-2">
+                  <div className="bg-gray-800 p-3 rounded border border-gray-700 flex items-center gap-3">
                     <div className="flex gap-1">
-                      {[1, 2, 3].map((i) => (
+                      {[1, 2, 3, 4, 5].map((i) => (
                         <div 
                           key={i}
-                          className={`w-3 h-3 rounded-full ${
-                            (lastMetrics.complexity_score || 1) >= i 
-                              ? i === 3 ? 'bg-red-500' : i === 2 ? 'bg-yellow-500' : 'bg-green-500'
-                              : 'bg-gray-700'
+                          className={`w-2 h-2 rounded-full ${
+                            (lastMetrics.complexity_score || 3) >= i 
+                              ? i === 5 ? 'bg-red-500' : i === 4 ? 'bg-orange-500' : i === 3 ? 'bg-yellow-500' : i === 2 ? 'bg-blue-500' : 'bg-green-500'
+                              : 'bg-gray-600'
                           }`}
+                          title={`Level ${i}`}
                         />
                       ))}
                     </div>
                     <span className="text-white text-xs font-medium">
-                      {lastMetrics.complexity_score === 3 ? 'High' : lastMetrics.complexity_score === 2 ? 'Medium' : 'Low'}
+                      {lastMetrics.complexity_score === 1
+                        ? 'Very Simple'
+                        : lastMetrics.complexity_score === 2
+                          ? 'Simple'
+                          : lastMetrics.complexity_score === 3
+                            ? 'Medium'
+                            : lastMetrics.complexity_score === 4
+                              ? 'Complex'
+                              : 'Very Complex'}
                     </span>
                   </div>
                 </div>
 
                 <div>
+                  <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Input Safety</span>
+                  <div className="bg-gray-800 p-3 rounded border border-gray-700 flex items-center gap-2">
+                    <div className="w-8 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${
+                          (lastMetrics.safety_score || 50) >= 80
+                            ? 'bg-green-500'
+                            : (lastMetrics.safety_score || 50) >= 60
+                              ? 'bg-blue-500'
+                              : (lastMetrics.safety_score || 50) >= 40
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.min(100, lastMetrics.safety_score || 50)}%` }}
+                      />
+                    </div>
+                    <span className="text-white text-xs font-medium min-w-max">
+                      {lastMetrics.safety_score || 50}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="col-span-2">
                   <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Selected Model</span>
                   <div className={`text-[10px] font-mono font-medium px-2 py-2 rounded border ${modelBadgeClasses(lastMetrics.model)}`}>
                     {lastMetrics.model}

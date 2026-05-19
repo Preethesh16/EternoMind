@@ -42,11 +42,12 @@ export function MessageBubble({ message }: Props) {
               <span className="font-mono">{message.metrics.memory_hits} memories</span>
             </div>
 
-            {/* Secondary metrics: Complexity and Prompt Goal */}
-            {(message.metrics.complexity_score || message.metrics.prompt_goal) && (
-              <div className="flex items-center gap-3 px-1 text-xs text-gray-400">
-                {message.metrics.complexity_score && (
-                  <>
+            {/* Secondary metrics: Complexity, Goal, and Safety */}
+            {(message.metrics.complexity_score || message.metrics.prompt_goal || message.metrics.safety_score !== undefined) && (
+              <div className="flex flex-col gap-1.5 px-1">
+                {/* Complexity and Safety on same line */}
+                <div className="flex items-center gap-3 text-xs">
+                  {message.metrics.complexity_score && (
                     <span className="inline-flex items-center gap-1.5">
                       <span className="text-gray-500">Complexity:</span>
                       <span
@@ -54,22 +55,55 @@ export function MessageBubble({ message }: Props) {
                           message.metrics.complexity_score === 1
                             ? 'bg-green-900/30 text-green-300'
                             : message.metrics.complexity_score === 2
-                              ? 'bg-yellow-900/30 text-yellow-300'
-                              : 'bg-red-900/30 text-red-300'
+                              ? 'bg-blue-900/30 text-blue-300'
+                              : message.metrics.complexity_score === 3
+                                ? 'bg-yellow-900/30 text-yellow-300'
+                                : message.metrics.complexity_score === 4
+                                  ? 'bg-orange-900/30 text-orange-300'
+                                  : 'bg-red-900/30 text-red-300'
                         }`}
+                        title={`Complexity Level ${message.metrics.complexity_score}`}
                       >
                         {message.metrics.complexity_score === 1
-                          ? 'Simple'
+                          ? 'Very Simple'
                           : message.metrics.complexity_score === 2
-                            ? 'Medium'
-                            : 'Complex'}
+                            ? 'Simple'
+                            : message.metrics.complexity_score === 3
+                              ? 'Medium'
+                              : message.metrics.complexity_score === 4
+                                ? 'Complex'
+                                : 'Very Complex'}
                       </span>
                     </span>
-                    {message.metrics.prompt_goal && <span>·</span>}
-                  </>
-                )}
+                  )}
+                  
+                  {message.metrics.safety_score !== undefined && (
+                    <>
+                      {message.metrics.complexity_score && <span className="text-gray-600">·</span>}
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="text-gray-500">Safety:</span>
+                        <span
+                          className={`font-mono font-medium px-2 py-0.5 rounded ${
+                            message.metrics.safety_score >= 80
+                              ? 'bg-green-900/30 text-green-300'
+                              : message.metrics.safety_score >= 60
+                                ? 'bg-blue-900/30 text-blue-300'
+                                : message.metrics.safety_score >= 40
+                                  ? 'bg-yellow-900/30 text-yellow-300'
+                                  : 'bg-red-900/30 text-red-300'
+                          }`}
+                          title={`Safety Score: ${message.metrics.safety_score}/100`}
+                        >
+                          {message.metrics.safety_score}%
+                        </span>
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* Prompt Goal on separate line */}
                 {message.metrics.prompt_goal && (
-                  <span className="text-gray-400 italic">Goal: {message.metrics.prompt_goal}</span>
+                  <span className="text-gray-400 italic text-xs">Goal: {message.metrics.prompt_goal}</span>
                 )}
               </div>
             )}
