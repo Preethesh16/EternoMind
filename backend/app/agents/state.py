@@ -11,6 +11,7 @@ class AgentState(TypedDict):
     session_id: str
     user_id: str
     original_query: str
+    safety_score: int  # 0-100 safety rating of input (100 = safe, 0 = suspicious)
 
     # ── Step 3: memory_retrieval ─────────────────────────────────────────────
     retrieved_memories: list[dict]
@@ -26,7 +27,7 @@ class AgentState(TypedDict):
     optimized_prompt: str
     token_estimate: int
     prompt_goal: str
-    complexity_score: int
+    complexity_score: int  # 1-5 scale
 
     # ── Step 7: model_router ─────────────────────────────────────────────────
     selected_model: str

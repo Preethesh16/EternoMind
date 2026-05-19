@@ -103,23 +103,49 @@ class CascadeflowRouter:
             )
 
     def _rule_based_route(
-        self, memory_hits: int, token_estimate: int, complexity_score: int = 1
+        self, memory_hits: int, token_estimate: int, complexity_score: int = 3
     ) -> str:
-        """Deterministic routing logic — also used as the SDK fallback."""
-        # Use LARGE model if task is high complexity (3), regardless of memory
-        if complexity_score >= 3:
-            return settings.groq_large_model
-            
-        # If medium complexity (2), we only use SMALL if we have very high memory hits
-        if complexity_score == 2:
+        """
+        Deterministic routing logic — also used as the SDK fallback.
+        
+        Now supports 5 complexity levels with memory/token-based refinement:
+        1 = Very Simple (basic factual)
+        2 = Simple (light reasoning)
+        3 = Medium (standard reasoning)
+        4 = Complex (advanced reasoning)
+        5 = Very Complex (expert-level, creative)
+        """
+        from app.config import settings
+        
+        # Base model selection by complexity
+        if complexity_score >= 5:
+            # Very complex: always use largest model
+            return settings.get_model_for_complexity(5)
+        
+        if complexity_score == 4:
+            # Complex: use large model unless we have excellent memory context
+            if memory_hits >= 7 and token_estimate < 1200:
+                return settings.get_model_for_complexity(3)
+            return settings.get_model_for_complexity(4)
+        
+        if complexity_score == 3:
+            # Medium: can use medium model with good memory context
             if memory_hits >= 6 and token_estimate < 1500:
-                return settings.groq_small_model
-            return settings.groq_large_model
-            
-        # Low complexity (1) - original logic
-        if memory_hits >= 4 and token_estimate < 2000:
-            return settings.groq_small_model
-        return settings.groq_large_model
+                return settings.get_model_for_complexity(3)
+            elif memory_hits >= 4 and token_estimate < 2000:
+                return settings.get_model_for_complexity(3)
+            return settings.get_model_for_complexity(4)
+        
+        if complexity_score == 2:
+            # Simple: prefer small model with sufficient context
+            if memory_hits >= 4 and token_estimate < 2000:
+                return settings.get_model_for_complexity(2)
+            return settings.get_model_for_complexity(3)
+        
+        # Very simple (level 1): use smallest model by default
+        if memory_hits >= 2 and token_estimate < 2500:
+            return settings.get_model_for_complexity(1)
+        return settings.get_model_for_complexity(2)
 
     async def route(self, memory_hits: int, token_estimate: int, complexity_score: int = 1) -> str:
         """

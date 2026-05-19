@@ -100,7 +100,7 @@ class PromptOptimizer:
         token_estimate = int(len(optimized_prompt.split()) * 1.2)
 
         prompt_goal = "Synthesize an answer using relevant context."
-        complexity_score = 1  # 1 (low), 2 (medium), 3 (high)
+        complexity_score = 3  # Default to level 3 (1-5 scale: 1=very simple, 5=very complex)
         
         if groq_client:
             try:
@@ -109,13 +109,18 @@ class PromptOptimizer:
                 analysis_query = (
                     "Analyze this user request: '" + query + "'\n"
                     "1. Summarize the primary goal in ONE short phrase.\n"
-                    "2. Rate complexity from 1 to 3 (1=simple fact, 2=reasoning, 3=creative/complex coding).\n"
-                    "Return ONLY in this format: Goal: [phrase] | Complexity: [1, 2, or 3]"
+                    "2. Rate complexity from 1 to 5:\n"
+                    "   1=basic factual question (e.g., 'What is 2+2?')\n"
+                    "   2=simple reasoning required (e.g., 'Explain a concept')\n"
+                    "   3=moderate reasoning (e.g., 'Compare two ideas')\n"
+                    "   4=complex reasoning (e.g., 'Design a system')\n"
+                    "   5=creative/expert-level work (e.g., 'Write production code')\n"
+                    "Return ONLY in this format: Goal: [phrase] | Complexity: [1-5]"
                 )
                 analysis_resp = await groq_client.chat.completions.create(
-                    model=settings.groq_small_model,
+                    model=settings.groq_model_very_simple,
                     messages=[{"role": "user", "content": analysis_query}],
-                    max_tokens=60,
+                    max_tokens=80,
                 )
                 result = analysis_resp.choices[0].message.content.strip()
                 if "|" in result:
@@ -124,8 +129,10 @@ class PromptOptimizer:
                     complexity_str = complex_part.replace("Complexity:", "").strip()
                     try:
                         complexity_score = int(complexity_str)
+                        # Clamp to 1-5 range
+                        complexity_score = max(1, min(5, complexity_score))
                     except:
-                        complexity_score = 2
+                        complexity_score = 3
             except Exception as e:
                 logger.warning("[prompt_optimizer] Goal/Complexity extraction failed: %s", e)
 

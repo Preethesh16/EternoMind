@@ -92,7 +92,10 @@ export function useChat() {
                 appendToken(assistantId, evt.token_delta)
               } else if (evt.event === 'done') {
                 const d = evt.data as { 
-                  total_tokens: number; 
+                  interaction_number?: number;
+                  total_tokens: number;
+                  token_count_input?: number;
+                  token_count_output?: number;
                   model: string; 
                   latency_ms: number; 
                   memory_hits: number; 
@@ -101,6 +104,8 @@ export function useChat() {
                   prompt_goal?: string;
                   complexity_score?: number;
                   token_estimate?: number;
+                  safety_score?: number;
+                  estimated_cost?: number;
                 }
                 // If the message bubble is empty (no token events arrived),
                 // fall back to displaying the full response_text from `done`.
@@ -121,14 +126,19 @@ export function useChat() {
                   prompt_goal: d.prompt_goal,
                   complexity_score: d.complexity_score,
                   token_estimate: d.token_estimate,
+                  safety_score: d.safety_score,
+                  estimated_cost: d.estimated_cost,
                 })
                 addInteraction({
-                  interaction_number: 0,
-                  token_count_input: d.total_tokens,
-                  token_count_output: 0,
+                  interaction_number: d.interaction_number ?? 0,
+                  token_count_input: d.token_count_input ?? d.total_tokens,
+                  token_count_output: d.token_count_output ?? 0,
                   model_used: d.model,
                   memory_hits: d.memory_hits,
                   latency_ms: d.latency_ms,
+                  safety_score: d.safety_score,
+                  complexity_score: d.complexity_score,
+                  estimated_cost: d.estimated_cost,
                 })
                 void refreshMetrics()
               } else if (evt.event === 'error') {

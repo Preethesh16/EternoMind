@@ -22,6 +22,7 @@ from app.db.database import get_db
 from app.db.models import InteractionLog
 from app.runtime.pipeline import run_pipeline
 from app.security.sanitizer import validate_and_sanitize
+from app.utils.pricing import estimate_cost
 
 logger = logging.getLogger(__name__)
 
@@ -54,10 +55,10 @@ async def chat(
     SSE event sequence:
         pipeline_step × N  — one per pipeline node as it starts
         token × M          — one per Groq token chunk
-        done               — final metrics + complete response text
+        done               — final metrics + complete response text + safety info
         error              — only if the pipeline crashed
     """
-    sanitized_message = validate_and_sanitize(request.message)
+    sanitized_message, safety_score = validate_and_sanitize(request.message)
     pipeline_start = time.time()
 
     # asyncio.Queue is the proper primitive — gives us backpressure and a clean
@@ -77,6 +78,7 @@ async def chat(
                     message=sanitized_message,
                     user_id=request.user_id,
                     event_callback=event_callback,
+                    safety_score=safety_score,
                 )
                 return final_state  # type: ignore[return-value]
             finally:
@@ -137,21 +139,28 @@ async def chat(
         # Emit the `done` event — includes the full response_text so the
         # frontend can fall back to displaying it whole if streaming tokens
         # were missed (e.g., a model that doesn't actually stream chunks).
+        input_tokens = final_state.get("token_count_input", 0)
+        output_tokens = final_state.get("token_count_output", 0)
+        model = final_state.get("selected_model", "unknown")
+        estimated_cost = estimate_cost(model, input_tokens, output_tokens)
+        
         yield _sse_event(
             "done",
             {
-                "total_tokens": (
-                    final_state.get("token_count_input", 0)
-                    + final_state.get("token_count_output", 0)
-                ),
-                "model": final_state.get("selected_model", "unknown"),
+                "interaction_number": interaction_number,
+                "total_tokens": input_tokens + output_tokens,
+                "token_count_input": input_tokens,
+                "token_count_output": output_tokens,
+                "model": model,
                 "latency_ms": round((time.time() - pipeline_start) * 1000, 1),
                 "memory_hits": final_state.get("memory_hits", 0),
                 "response_text": final_state.get("response_text", ""),
                 "optimized_prompt": final_state.get("optimized_prompt", ""),
                 "prompt_goal": final_state.get("prompt_goal", ""),
-                "complexity_score": final_state.get("complexity_score", 1),
+                "complexity_score": final_state.get("complexity_score", 3),
                 "token_estimate": final_state.get("token_estimate", 0),
+                "safety_score": final_state.get("safety_score", 50),
+                "estimated_cost": round(estimated_cost, 6),
             },
         )
 

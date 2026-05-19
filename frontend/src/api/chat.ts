@@ -21,6 +21,8 @@ export type SSEEvent =
         prompt_goal?: string
         complexity_score?: number
         token_estimate?: number
+        safety_score?: number
+        estimated_cost?: number
       }
       token_delta: ''
     }
