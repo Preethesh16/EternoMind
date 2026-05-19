@@ -217,16 +217,6 @@ All three developers share these API contracts. **Names and shapes are canonical
 
 ---
 
-## Team & Branches
-
-| Developer | File | Branch | Owns |
-|-----------|------|--------|------|
-| Person 1 | [person1.md](./person1.md) | `backend-core` | Backend Core: FastAPI scaffold, DB, security, auth |
-| Person 2 | [person2.md](./person2.md) | `ai-pipeline` | AI Pipeline: LangGraph, Hindsight, RAG, cascadeflow |
-| Person 3 | [person3.md](./person3.md) | `frontend` | Frontend + Integration: React UI, charts, Docker Compose |
-
-Each developer works exclusively on their own branch. Open a PR to `main` only when your phases are complete and tested.
-
 ---
 
 ## Demo Instructions (for judges)
@@ -244,6 +234,4 @@ Each developer works exclusively on their own branch. Open a PR to `main` only w
 
 ---
 
-## License
 
-MIT — built for the "Building AI Agents with Hindsight & cascadeflow" hackathon.
