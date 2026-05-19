@@ -25,6 +25,8 @@ class AgentState(TypedDict):
     # ── Step 6: prompt_optimizer ─────────────────────────────────────────────
     optimized_prompt: str
     token_estimate: int
+    prompt_goal: str
+    complexity_score: int
 
     # ── Step 7: model_router ─────────────────────────────────────────────────
     selected_model: str

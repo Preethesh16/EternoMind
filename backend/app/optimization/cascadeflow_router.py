@@ -103,49 +103,59 @@ class CascadeflowRouter:
             )
 
     def _rule_based_route(
-        self, memory_hits: int, token_estimate: int
+        self, memory_hits: int, token_estimate: int, complexity_score: int = 1
     ) -> str:
         """Deterministic routing logic — also used as the SDK fallback."""
+        # Use LARGE model if task is high complexity (3), regardless of memory
+        if complexity_score >= 3:
+            return settings.groq_large_model
+            
+        # If medium complexity (2), we only use SMALL if we have very high memory hits
+        if complexity_score == 2:
+            if memory_hits >= 6 and token_estimate < 1500:
+                return settings.groq_small_model
+            return settings.groq_large_model
+            
+        # Low complexity (1) - original logic
         if memory_hits >= 4 and token_estimate < 2000:
             return settings.groq_small_model
         return settings.groq_large_model
 
-    async def route(self, memory_hits: int, token_estimate: int) -> str:
+    async def route(self, memory_hits: int, token_estimate: int, complexity_score: int = 1) -> str:
         """
         Select the Groq model for this pipeline run.
 
         Args:
-            memory_hits:    Number of Hindsight memories that passed the relevancy filter.
-            token_estimate: Estimated token count of the optimized prompt.
+            memory_hits:      Number of Hindsight memories that passed the relevancy filter.
+            token_estimate:   Estimated token count of the optimized prompt.
+            complexity_score: Rated complexity of the task (1-3).
 
         Returns:
-            Groq model name string (e.g. "llama-3.1-8b-instant" or "llama-3.3-70b-versatile").
+            Groq model name string.
         """
-        # Initialize the SDK lazily on first call. This sets self._sdk_available
-        # and registers the harness so any Groq calls made later in the pipeline
-        # are tracked by cascadeflow's observability.
         self._try_init_sdk()
 
-        # The routing decision itself remains rule-based — that's the fast path
-        # cascadeflow's CascadeAgent.run() is for execution-time fallback, not
-        # pre-execution routing. The harness still observes the call.
-        model = self._rule_based_route(memory_hits, token_estimate)
+        selected_model = self._rule_based_route(memory_hits, token_estimate, complexity_score)
+        use_small = selected_model == settings.groq_small_model
 
-        if self._sdk_available:
+        if use_small:
             logger.info(
-                "[cascadeflow] route → %s (hits=%d tokens≈%d, harness=observe)",
-                model,
-                memory_hits,
-                token_estimate,
+                "🔄 SWITCHING TO SMALL MODEL: Complexity=%d, Memory=%d, Tokens=%d",
+                complexity_score, memory_hits, token_estimate
             )
         else:
             logger.info(
-                "[cascadeflow] rule-based route → %s (hits=%d tokens≈%d)",
-                model,
-                memory_hits,
-                token_estimate,
+                "⚡ USING LARGE MODEL: Complexity=%d, Memory=%d, Tokens=%d",
+                complexity_score, memory_hits, token_estimate
             )
-        return model
+
+        if self._sdk_available:
+            logger.info(
+                "[cascadeflow] routed to %s (harness=observe)",
+                selected_model
+            )
+        
+        return selected_model
 
 
 # Module-level singleton

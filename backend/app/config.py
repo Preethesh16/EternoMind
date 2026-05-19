@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     cascadeflow_api_key: str = ""
 
     # ── Model Names ──────────────────────────────────────────
-    groq_large_model: str = "llama3-70b-8192"
-    groq_small_model: str = "llama3-8b-8192"
+    groq_large_model: str = "llama-3.3-70b-versatile"
+    groq_small_model: str = "llama-3.1-8b-instant"
 
     # ── CORS ─────────────────────────────────────────────────
     cors_origins: str = "http://localhost:5173"

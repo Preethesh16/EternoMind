@@ -67,6 +67,8 @@ async def run_pipeline(
         "rag_documents": [],
         "optimized_prompt": "",
         "token_estimate": 0,
+        "prompt_goal": "",
+        "complexity_score": 1,
         "selected_model": "",
         "response_text": "",
         "token_count_input": 0,

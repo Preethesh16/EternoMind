@@ -21,15 +21,33 @@ async def prompt_optimizer_node(state: AgentState) -> AgentState:
         len(state["rag_documents"]),
     )
 
+    from groq import AsyncGroq
+    from app.config import settings
+    client = AsyncGroq(api_key=settings.groq_api_key)
+
     optimizer = get_prompt_optimizer()
-    optimized_prompt, token_estimate = await optimizer.optimize(
+    optimized_prompt, token_estimate, prompt_goal, complexity_score = await optimizer.optimize(
         query=state["original_query"],
         memories=state["relevant_memories"],
         rag_docs=state["rag_documents"],
+        groq_client=client,
     )
+
+    event_callback = state.get("_event_callback")
+    if event_callback:
+        await event_callback("pipeline_step", {
+            "step": "prompt_optimizer", 
+            "status": "complete",
+            "optimized_prompt": optimized_prompt,
+            "prompt_goal": prompt_goal,
+            "complexity_score": complexity_score,
+            "token_estimate": token_estimate
+        })
 
     return {
         **state,
         "optimized_prompt": optimized_prompt,
         "token_estimate": token_estimate,
+        "prompt_goal": prompt_goal,
+        "complexity_score": complexity_score,
     }
