@@ -23,16 +23,37 @@ from app.db.models import InteractionLog
 from app.runtime.pipeline import run_pipeline
 from app.security.sanitizer import validate_and_sanitize
 from app.utils.pricing import estimate_cost
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 
+# ── Available models endpoint ─────────────────────────────────────────────────
+
+AVAILABLE_MODELS = [
+    {"id": "auto",                                      "label": "Auto (cascadeflow routing)", "tier": "auto"},
+    {"id": "llama-3.1-8b-instant",                     "label": "Llama 3.1 8B — Fast",        "tier": "small"},
+    {"id": "llama-3.3-70b-versatile",                  "label": "Llama 3.3 70B — Balanced",   "tier": "large"},
+    {"id": "meta-llama/llama-4-scout-17b-16e-instruct","label": "Llama 4 Scout 17B — Expert",  "tier": "expert"},
+    {"id": "qwen/qwen3-32b",                           "label": "Qwen3 32B — Reasoning",      "tier": "large"},
+    {"id": "openai/gpt-oss-20b",                       "label": "GPT-OSS 20B",                "tier": "large"},
+    {"id": "openai/gpt-oss-120b",                      "label": "GPT-OSS 120B — Powerful",    "tier": "large"},
+]
+
+
+@router.get("/models")
+async def list_models() -> dict:
+    """Return available models for the frontend model selector."""
+    return {"models": AVAILABLE_MODELS, "default": "auto"}
+
+
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     user_id: str
+    model: str | None = None  # optional — if set, overrides auto-routing
 
 
 def _sse_event(event_name: str, data: dict) -> str:
@@ -79,6 +100,7 @@ async def chat(
                     user_id=request.user_id,
                     event_callback=event_callback,
                     safety_score=safety_score,
+                    force_model=request.model,
                 )
                 return final_state  # type: ignore[return-value]
             finally:
@@ -159,6 +181,7 @@ async def chat(
                 "prompt_goal": final_state.get("prompt_goal", ""),
                 "complexity_score": final_state.get("complexity_score", 3),
                 "token_estimate": final_state.get("token_estimate", 0),
+                "raw_token_estimate": final_state.get("raw_token_estimate", 0),
                 "safety_score": final_state.get("safety_score", 50),
                 "estimated_cost": round(estimated_cost, 6),
             },

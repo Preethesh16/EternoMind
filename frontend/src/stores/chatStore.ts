@@ -9,6 +9,7 @@ export interface MessageMetrics {
   prompt_goal?: string
   complexity_score?: number  // 1-5 scale
   token_estimate?: number
+  raw_token_estimate?: number  // tokens BEFORE optimization
   safety_score?: number  // 0-100 scale
   estimated_cost?: number  // Cost in USD
 }

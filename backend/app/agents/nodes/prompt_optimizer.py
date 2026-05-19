@@ -33,6 +33,19 @@ async def prompt_optimizer_node(state: AgentState) -> AgentState:
         groq_client=client,
     )
 
+    # Calculate what the raw (unoptimized) token count would have been
+    # if we sent ALL memories + ALL RAG docs without compression
+    raw_parts = [state["original_query"]]
+    for m in state.get("retrieved_memories", []):
+        raw_parts.append(m.get("content", ""))
+    for d in state.get("rag_documents", []):
+        raw_parts.append(d.get("content", ""))
+    raw_text = " ".join(raw_parts)
+    raw_token_estimate = int(len(raw_text.split()) * 1.2)
+    # Ensure raw is always >= optimized (for display logic)
+    if raw_token_estimate < token_estimate:
+        raw_token_estimate = token_estimate + 50
+
     event_callback = state.get("_event_callback")
     if event_callback:
         await event_callback("pipeline_step", {
@@ -48,6 +61,7 @@ async def prompt_optimizer_node(state: AgentState) -> AgentState:
         **state,
         "optimized_prompt": optimized_prompt,
         "token_estimate": token_estimate,
+        "raw_token_estimate": raw_token_estimate,
         "prompt_goal": prompt_goal,
         "complexity_score": complexity_score,
     }

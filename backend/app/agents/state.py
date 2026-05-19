@@ -3,10 +3,10 @@ LangGraph AgentState — the shared state TypedDict passed between all pipeline 
 """
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Any, Awaitable, Callable, TypedDict
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     # ── Input ────────────────────────────────────────────────────────────────
     session_id: str
     user_id: str
@@ -43,3 +43,7 @@ class AgentState(TypedDict):
 
     # ── Timing ───────────────────────────────────────────────────────────────
     pipeline_start_ms: float
+
+    # ── Streaming callback (optional, used by llm_inference for token events)
+    # Stored as Any so LangGraph's TypedDict validation doesn't choke.
+    _event_callback: Any  # Callable[[str, dict], Awaitable[None]]
