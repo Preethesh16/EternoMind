@@ -81,14 +81,4 @@ async def llm_inference_node(state: AgentState) -> AgentState:
 
     except Exception as exc:
         logger.error("[llm_inference] Groq call failed: %s", exc)
-        if event_callback:
-            await event_callback(
-                "error",
-                {"step": "llm_inference", "message": str(exc)},
-            )
-        return {
-            **state,
-            "response_text": f"Error: {exc}",
-            "token_count_input": state.get("token_estimate", 0),
-            "token_count_output": 0,
-        }
+        raise
