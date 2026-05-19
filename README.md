@@ -66,33 +66,30 @@ This progression is **visible in the UI** via the Token Savings Chart — a live
 ```
 eternomind/
 ├── README.md
-├── person1.md              # Developer 1 workstream (Backend Core)
-├── person2.md              # Developer 2 workstream (AI/Agent Pipeline)
-├── person3.md              # Developer 3 workstream (Frontend + Integration)
-├── docker-compose.yml      # Owned by Person 3
-├── .env.example            # Owned by Person 1
+├── docker-compose.yml
+├── .env.example
 │
 ├── backend/
 │   └── app/
-│       ├── api/            # FastAPI routers (Person 1 + Person 2)
-│       ├── agents/         # LangGraph state machine (Person 2)
-│       ├── memory/         # Hindsight SDK integration (Person 2)
-│       ├── rag/            # ChromaDB RAG (Person 2)
-│       ├── optimization/   # Prompt Optimizer, cascadeflow (Person 2)
-│       ├── runtime/        # Pipeline orchestrator (Person 2)
-│       ├── security/       # Auth, sanitization, rate limiting (Person 1)
-│       ├── db/             # SQLAlchemy models, Alembic (Person 1)
-│       ├── schemas/        # Pydantic request/response models (Person 1 + 2)
-│       └── main.py         # FastAPI app entry point (Person 1)
+│       ├── api/            # FastAPI routers
+│       ├── agents/         # LangGraph state machine
+│       ├── memory/         # Hindsight SDK integration
+│       ├── rag/            # ChromaDB RAG
+│       ├── optimization/   # Prompt Optimizer, cascadeflow
+│       ├── runtime/        # Pipeline orchestrator
+│       ├── security/       # Auth, sanitization, rate limiting
+│       ├── db/             # SQLAlchemy models, Alembic
+│       ├── schemas/        # Pydantic request/response models
+│       └── main.py         # FastAPI app entry point
 │
 └── frontend/
     └── src/
         ├── components/
-        │   ├── chat/       # ChatInterface, MessageBubble, StreamingText (Person 3)
-        │   └── dashboard/  # TokenSavingsChart, PipelineStepsPanel (Person 3)
-        ├── hooks/          # useChat, useMetrics, useSSE (Person 3)
-        ├── stores/         # Zustand: chatStore, sessionStore, metricsStore (Person 3)
-        └── api/            # Axios/fetch wrappers for backend calls (Person 3)
+        │   ├── chat/       # ChatInterface, MessageBubble, StreamingText
+        │   └── dashboard/  # TokenSavingsChart, PipelineStepsPanel, MetricsBar
+        ├── hooks/          # useChat, useMetrics, useSSE
+        ├── stores/         # Zustand: chatStore, sessionStore, metricsStore
+        └── api/            # Fetch wrappers for backend calls
 ```
 
 ---
@@ -231,6 +228,22 @@ All three developers share these API contracts. **Names and shapes are canonical
    - Response arrives nearly instantly
    - Token Savings Chart shows the full downward curve
 6. Click the Pipeline Steps panel to see each of the 12 steps light up in real time
+
+---
+
+## Contributors
+
+| Role | Name | Owns |
+|------|------|------|
+| Backend Core | **Preethesh Carvalho** | FastAPI scaffold, SQLite + Alembic, JWT auth, security middleware, sessions, health |
+| AI/Agent Pipeline | **Imran Kazia** | LangGraph state machine, Hindsight memory, ChromaDB RAG, prompt optimizer, cascadeflow routing, Groq inference |
+| Frontend + Integration | **Deepthi C J** | React UI, chat streaming, token savings chart, pipeline panel, model selector, Docker Compose |
+
+---
+
+## License
+
+MIT — built for the **Building AI Agents with Hindsight & cascadeflow** hackathon.
 
 ---
 
