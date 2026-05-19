@@ -14,7 +14,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 
-[Demo](#demo) · [Features](#features) · [Quick Start](#quick-start) · [Architecture](#architecture) · [API](#api-reference) · [Contributors](#contributors)
+[Demo](#demo) · [Features](#features) · [Quick Start](#quick-start) · [Architecture](#architecture) · [API](#api-reference)
 
 </div>
 
@@ -345,20 +345,6 @@ CORS_ORIGINS=http://localhost:5173
 
 ---
 
-## Contributors
-
-Built for the **Building AI Agents with Hindsight & cascadeflow** hackathon.
-
-| Name | Role | Domain |
-|------|------|--------|
-| **Preethesh Carvalho** | Backend Core | FastAPI scaffold, SQLite + Alembic, JWT auth, security middleware, sessions, health, integration testing |
-| **Imran Kazia** | AI / Agent Pipeline | LangGraph state machine, Hindsight memory, ChromaDB RAG, prompt optimizer, cascadeflow routing, Groq inference |
-| **Deepthi C J** | Frontend & Integration | React UI, chat streaming, token-savings chart, pipeline panel, model selector, Docker Compose |
-| **Navya** | Design & Product | UI/UX direction, landing page concept, design system, demo storytelling |
-| **Abhinav** | Design & Product | Visual design, brand identity, dashboard layout, animations |
-
----
-
 ## License
 
-Released under the [MIT License](https://opensource.org/licenses/MIT). Built with ❤️ for the *Building AI Agents with Hindsight & cascadeflow* hackathon.
+Released under the [MIT License](https://opensource.org/licenses/MIT).
