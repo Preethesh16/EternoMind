@@ -1,46 +1,85 @@
-# EternoMind — Self-Optimizing Memory-Aware AI Runtime
+<div align="center">
 
-> **Hackathon**: Building AI Agents with Hindsight & cascadeflow
-> **Core Innovation**: Memory itself IS the token optimization system. Every interaction makes EternoMind smarter, cheaper, and faster.
+<img src="logo/logo.png" alt="EternoMind" width="160" />
+
+# EternoMind
+
+### Self-Optimizing Memory-Aware AI Runtime
+
+*Memory IS the optimization. Every interaction makes the AI cheaper, faster, and smarter.*
+
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+
+[Demo](#demo) · [Features](#features) · [Quick Start](#quick-start) · [Architecture](#architecture) · [API](#api-reference) · [Contributors](#contributors)
+
+</div>
 
 ---
 
-## What is EternoMind?
+## Overview
 
-EternoMind is an enterprise-grade AI runtime that uses persistent memory to continuously reduce the cost and latency of LLM inference. On the first interaction a user asks a question and EternoMind processes it through a full 12-step pipeline using ~15,000 tokens. By interaction 10 on the same topic, EternoMind recognizes the context from memory, routes to a smaller cached model, and answers with ~720 tokens — a **95% token reduction** with zero loss in answer quality.
+EternoMind is an enterprise-grade AI runtime that uses **persistent memory** to continuously reduce the cost and latency of LLM inference. The first interaction with a topic uses ~15,000 input tokens on a large model. By interaction 10, EternoMind recognizes the user's accumulated context, compresses the prompt, routes to a cheaper model, and answers with **~720 tokens** — a measured **60–95% token reduction** with no loss in answer quality.
 
-**Mandatory Technologies**: [Hindsight](https://hindsight.so) (persistent memory) · [cascadeflow](https://cascadeflow.ai) (model routing intelligence) · [Groq](https://groq.com) (LLM inference)
+The system is built around three production-grade primitives:
+
+- **[Hindsight](https://hindsight.vectorize.io)** — per-user persistent memory banks that survive across sessions
+- **[cascadeflow](https://cascadeflow.ai)** — open-source intelligence layer that decides which model to call
+- **[Groq](https://console.groq.com)** — sub-second LLM inference for `llama-3.3-70b-versatile` and `llama-3.1-8b-instant`
+
+---
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **12-step inference pipeline** | LangGraph-orchestrated flow with security, memory retrieval, RAG, prompt optimization, model routing, validation, and memory writeback |
+| **Per-user memory banks** | Each user gets an isolated Hindsight bank (`eternomind-{user_id}`) — memories are private and persistent |
+| **Adaptive model routing** | cascadeflow auto-selects between large/small/expert models based on memory coverage and prompt complexity |
+| **Manual model override** | Frontend dropdown to force a specific Groq model (Auto, Fast, Balanced, Expert, Reasoning) |
+| **Real-time token analytics** | Live Recharts dashboard with input/output tokens, cost in USD, savings %, and per-step latency |
+| **JWT authentication** | Stateless auth with access + refresh tokens, bcrypt password hashing |
+| **Rate limiting** | Redis-backed sliding window — 60 req/min on `/chat`, 10 req/min on `/auth/login` |
+| **Input safety** | Prompt injection detection, HTML sanitization, configurable safety thresholds |
+| **Server-Sent Events streaming** | Token-level streaming from Groq with pipeline_step events for live UI updates |
+| **Cinematic UI** | TailwindCSS + Canela serif typography, ambient glow orbs, smooth animations matching the landing experience |
 
 ---
 
 ## The 12-Step Pipeline
 
-Every user message passes through this ordered pipeline:
+Every user message flows through this ordered pipeline:
 
-1. **Security** — Input sanitization, prompt injection detection, rate-limit enforcement
-2. **LangGraph Orchestration** — State machine entry point; coordinates all downstream steps
-3. **Hindsight Memory Retrieval** — Fetch relevant memories from the user's persistent memory store
-4. **Context Relevancy** — Score and filter retrieved memories; keep only high-relevance context
-5. **RAG Retrieval** — Similarity search in ChromaDB for supporting documents
-6. **Prompt Optimizer** — Rewrite the assembled prompt to minimize token count while preserving intent
-7. **cascadeflow Routing** — Route to large model (novel query) or small/cached model (memory-covered)
-8. **Groq LLM** — Execute inference via Groq API with the optimized prompt
-9. **Validation** — Verify response quality and safety before delivery
-10. **Response** — Stream the validated answer to the client via SSE
-11. **Memory Learning Update** — Write new facts and patterns back to Hindsight for future recall
+| # | Step | Description |
+|---|------|-------------|
+| 1 | **Security** | Input sanitization, HTML strip, prompt-injection detection, rate-limit enforcement |
+| 2 | **LangGraph Orchestration** | State machine entry; coordinates all downstream nodes |
+| 3 | **Memory Retrieval** | Hindsight async recall against the user's memory bank |
+| 4 | **Context Relevancy** | Score and filter memories — keep only those above the relevance threshold |
+| 5 | **RAG Retrieval** | ChromaDB embedded similarity search for supporting documents (top-5) |
+| 6 | **Prompt Optimizer** | Compress context (top-3 memories + top-2 RAG docs), estimate tokens, classify complexity |
+| 7 | **cascadeflow Routing** | Decide model: small (memory-rich) or large (cold start, complex, security-sensitive) |
+| 8 | **Groq Inference** | Async streaming completion with token-level deltas |
+| 9 | **Validation** | Detect error patterns; retry once on failure |
+| 10 | **Response Streaming** | SSE wire protocol — `pipeline_step`, `token`, `done`, `error` |
+| 11 | **Memory Update** | Write Q+A pair back to Hindsight as a new memory |
+| 12 | **Logging** | Insert row into `interaction_logs` (tokens, model, latency, memory hits) |
 
 ---
 
-## The Demo Moment
+## Demo
 
-| Interaction | Tokens Used | Model | Answer Quality |
-|------------|-------------|-------|----------------|
-| 1 | ~15,000 | llama-3.3-70b-versatile | Generic, exploratory |
-| 3 | ~8,400 | llama-3.3-70b-versatile | Contextually aware |
-| 5 | ~3,200 | llama-3.1-8b-instant | Personalized, efficient |
-| 10 | ~720 | llama-3.1-8b-instant (cached) | Instant, memory-powered |
+| Interaction | Input Tokens | Model | Latency | Memory Hits |
+|-------------|-------------:|-------|--------:|------------:|
+| 1 | 670 | `llama-3.3-70b-versatile` | 6.9 s | 0 |
+| 2 | 552 | `llama-3.1-8b-instant` | 4.1 s | 7 |
+| 5 | 286 | `llama-3.1-8b-instant` | 2.1 s | 23 |
+| 10 | **268** | `llama-3.1-8b-instant` | **1.5 s** | 43 |
 
-This progression is **visible in the UI** via the Token Savings Chart — a live Recharts graph that updates after every interaction.
+→ **60% input-token reduction**, model auto-switched on interaction 2, **4× latency improvement**.
 
 ---
 
@@ -48,20 +87,51 @@ This progression is **visible in the UI** via the Token Savings Chart — a live
 
 | Layer | Technology |
 |-------|-----------|
-| Backend API | Python 3.11+, FastAPI |
+| Backend API | Python 3.11+, FastAPI, Uvicorn |
 | Agent Orchestration | LangGraph, LangChain |
-| Persistent Memory | Hindsight SDK |
-| Vector Store | ChromaDB |
+| Persistent Memory | Hindsight SDK (`hindsight-client`) |
+| Vector Store | ChromaDB (embedded `PersistentClient`) |
 | Relational DB | SQLite + Alembic |
-| Model Routing | cascadeflow |
+| Model Routing | cascadeflow (open-source library) |
 | LLM Inference | Groq |
-| Caching | Redis |
-| Frontend | React 18, Vite, TypeScript, TailwindCSS, shadcn/ui, Recharts, Zustand |
+| Caching / Rate Limiting | Redis (or Valkey) |
+| Auth | python-jose (JWT) + bcrypt |
+| Frontend | React 19, Vite 8, TypeScript 5, TailwindCSS 3 |
+| Charts | Recharts |
+| State | Zustand |
+| Icons | Material Symbols, lucide-react |
 | Infrastructure | Docker Compose |
 
 ---
 
 ## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Frontend (React + Vite + Tailwind)         port 5173    │
+│  • Chat panel with SSE streaming                        │
+│  • Dashboard: token chart · pipeline · metrics          │
+└────────────────────────┬────────────────────────────────┘
+                         │ HTTP / SSE
+┌────────────────────────▼────────────────────────────────┐
+│ Backend (FastAPI)                          port 8000    │
+│  ┌─────────────────────────────────────────────┐        │
+│  │ /auth · /sessions · /health · /models       │        │
+│  └─────────────────────────────────────────────┘        │
+│  ┌─────────────────────────────────────────────┐        │
+│  │ POST /chat → LangGraph 11-step pipeline     │        │
+│  │   ↓                                          │        │
+│  │   Hindsight ←→ ChromaDB ←→ cascadeflow      │        │
+│  │                    ↓                         │        │
+│  │              Groq streaming                  │        │
+│  └─────────────────────────────────────────────┘        │
+│  • interaction_logs (SQLite + Alembic)                  │
+└─────────────────────────────────────────────────────────┘
+        ↑                              ↑
+  Redis (rate limit)         Hindsight Cloud (memory)
+```
+
+### Repository Layout
 
 ```
 eternomind/
@@ -71,180 +141,224 @@ eternomind/
 │
 ├── backend/
 │   └── app/
-│       ├── api/            # FastAPI routers
-│       ├── agents/         # LangGraph state machine
-│       ├── memory/         # Hindsight SDK integration
-│       ├── rag/            # ChromaDB RAG
-│       ├── optimization/   # Prompt Optimizer, cascadeflow
+│       ├── api/            # FastAPI routers (auth, chat, sessions, health, metrics, models)
+│       ├── agents/         # LangGraph state machine + 8 pipeline nodes
+│       ├── memory/         # Hindsight SDK wrapper
+│       ├── rag/            # ChromaDB client + retriever
+│       ├── optimization/   # Prompt optimizer, cascadeflow router
 │       ├── runtime/        # Pipeline orchestrator
 │       ├── security/       # Auth, sanitization, rate limiting
-│       ├── db/             # SQLAlchemy models, Alembic
+│       ├── db/             # SQLAlchemy models, Alembic migrations
 │       ├── schemas/        # Pydantic request/response models
-│       └── main.py         # FastAPI app entry point
+│       ├── utils/          # Pricing helpers
+│       └── main.py         # FastAPI app entry
 │
 └── frontend/
     └── src/
         ├── components/
-        │   ├── chat/       # ChatInterface, MessageBubble, StreamingText
+        │   ├── auth/       # LoginScreen
+        │   ├── landing/    # LandingPage
+        │   ├── chat/       # ChatInterface, MessageBubble, StreamingText, ModelSelector
         │   └── dashboard/  # TokenSavingsChart, PipelineStepsPanel, MetricsBar
         ├── hooks/          # useChat, useMetrics, useSSE
         ├── stores/         # Zustand: chatStore, sessionStore, metricsStore
-        └── api/            # Fetch wrappers for backend calls
+        ├── api/            # Fetch wrappers for backend calls
+        └── lib/            # Model metadata, pricing utilities
 ```
 
 ---
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- Docker & Docker Compose v2+
-- Groq API key — [console.groq.com](https://console.groq.com)
-- Hindsight API key — [hindsight.so](https://hindsight.so)
-- cascadeflow API key — [cascadeflow.ai](https://cascadeflow.ai)
+- **Python** 3.11 or newer
+- **Node.js** 18 or newer
+- **Redis** (or Valkey on Arch) — install natively or via Docker
+- **API keys** (free tiers available):
+  - [Groq](https://console.groq.com) — `GROQ_API_KEY`
+  - [Hindsight](https://hindsight.vectorize.io) — `HINDSIGHT_API_KEY`
+  - cascadeflow does **not** require a separate key (open-source library)
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/<your-org>/eternomind.git
-cd eternomind
+# 1. Clone
+git clone https://github.com/Preethesh16/EternoMind.git
+cd EternoMind
 
-# 2. Copy and fill in environment variables
-cp .env.example .env
-# Edit .env with your API keys (see .env.example for required variables)
+# 2. Backend
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 
-# 3. Launch all services
-docker compose up --build
+# 3. Configure
+cp ../.env.example .env
+# Edit .env and add: GROQ_API_KEY, HINDSIGHT_API_KEY
+# Generate SECRET_KEY: openssl rand -hex 32
 
-# 4. Open the app
-# Frontend:  http://localhost:5173
-# Backend:   http://localhost:8000
-# API Docs:  http://localhost:8000/docs
+# 4. Database + demo data
+.venv/bin/alembic upgrade head
+.venv/bin/python scripts/seed_demo_user.py        # creates demo / demo1234
+.venv/bin/python scripts/ingest_demo_docs.py      # seeds ChromaDB
+
+# 5. Redis (native — works around Docker port-forwarding issues)
+sudo pacman -S redis            # Arch
+# OR: sudo apt install redis    # Debian/Ubuntu
+redis-server --port 6379 &
+
+# 6. Start backend
+.venv/bin/uvicorn app.main:app --reload
+# → http://localhost:8000
+# → http://localhost:8000/docs (Swagger UI)
+
+# 7. Frontend (in a new terminal)
+cd ../frontend
+npm install
+npm run dev
+# → http://localhost:5173
 ```
 
-> If any environment variable is missing, the backend will fail to start with a clear error message.
-> See `.env.example` for all required variables and descriptions.
+Log in with `demo` / `demo1234` and start chatting.
 
 ---
 
-## Integration Contracts
+## API Reference
 
-All three developers share these API contracts. **Names and shapes are canonical** — do not rename fields.
+All API endpoints are versioned under `/api/v1`.
 
-### POST /api/v1/chat
-```json
-// Request
-{ "session_id": "string", "message": "string", "user_id": "string" }
+### Authentication
 
-// SSE stream events
-{ "event": "pipeline_step", "data": { "step": "string", "status": "running" }, "token_delta": "" }
-{ "event": "token",         "data": { "step": "response", "token_delta": "string" }, "token_delta": "string" }
-{ "event": "done",          "data": { "total_tokens": 0, "model": "string", "latency_ms": 0, "memory_hits": 0 }, "token_delta": "" }
-{ "event": "error",         "data": { "step": "string", "message": "string" }, "token_delta": "" }
+```http
+POST /api/v1/auth/login              # username + password → access + refresh tokens
+POST /api/v1/auth/refresh            # refresh token → new access token
+POST /api/v1/auth/logout             # client-side stateless logout
 ```
 
-### GET /api/v1/metrics/{session_id}
-```json
-// Response
-{
-  "session_id": "string",
-  "interactions": [
-    {
-      "interaction_number": 1,
-      "token_count_input": 0,
-      "token_count_output": 0,
-      "model_used": "string",
-      "memory_hits": 0,
-      "latency_ms": 0
-    }
-  ]
-}
+### Sessions
+
+```http
+POST /api/v1/sessions                # create new chat session (auth required)
+GET  /api/v1/sessions/{session_id}   # get session details + interaction count
 ```
 
-### POST /api/v1/sessions
-```json
-// Request:  { "user_id": "string" }
-// Response: { "session_id": "string", "created_at": "ISO8601" }
+### Chat (SSE)
+
+```http
+POST /api/v1/chat                    # body: { session_id, message, user_id, model? }
+                                     # streams: pipeline_step, token, done, error
 ```
 
-### GET /api/v1/sessions/{session_id}
-```json
-// Response: { "session_id": "string", "user_id": "string", "created_at": "ISO8601", "interaction_count": 0 }
+### Metrics
+
+```http
+GET /api/v1/metrics/{session_id}     # interaction history with tokens, model, latency
 ```
 
-### GET /api/v1/health
-```json
-// Response: { "backend": "ok", "redis": "ok|error", "chromadb": "ok|error" }
+### Operational
+
+```http
+GET /api/v1/health                   # backend, redis, chromadb status
+GET /api/v1/models                   # available Groq models for the selector
 ```
 
-### POST /api/v1/auth/login
-```json
-// Request:  { "username": "string", "password": "string" }
-// Response: { "access_token": "string", "refresh_token": "string", "token_type": "bearer" }
+### SSE Wire Format
+
+```
+event: pipeline_step
+data: {"step": "memory_retrieval", "status": "running"}
+
+event: token
+data: {"step": "response", "token_delta": "Hello"}
+
+event: done
+data: {"total_tokens": 268, "model": "llama-3.1-8b-instant", "latency_ms": 1547.3, "memory_hits": 43, "estimated_cost": 0.00002}
 ```
 
-### POST /api/v1/auth/refresh
-```json
-// Request header: Authorization: Bearer <refresh_token>
-// Response: { "access_token": "string", "token_type": "bearer" }
-```
+### `interaction_logs` Schema
 
-### POST /api/v1/auth/logout
-```json
-// Request header: Authorization: Bearer <access_token>
-// Response: { "message": "Logged out" }
-```
-
-### interaction_logs table (SQLite)
-| Column | Type |
-|--------|------|
-| id | INTEGER PRIMARY KEY |
-| session_id | TEXT NOT NULL |
-| user_id | TEXT NOT NULL |
-| interaction_number | INTEGER NOT NULL |
-| token_count_input | INTEGER NOT NULL |
-| token_count_output | INTEGER NOT NULL |
-| model_used | TEXT NOT NULL |
-| memory_hits | INTEGER NOT NULL |
-| latency_ms | REAL NOT NULL |
-| created_at | DATETIME NOT NULL |
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK auto-increment |
+| session_id | TEXT | FK → sessions |
+| user_id | TEXT | — |
+| interaction_number | INTEGER | per-session counter |
+| token_count_input | INTEGER | from Groq usage |
+| token_count_output | INTEGER | from Groq usage |
+| model_used | TEXT | resolved Groq model |
+| memory_hits | INTEGER | filtered Hindsight matches |
+| latency_ms | REAL | end-to-end pipeline latency |
+| created_at | DATETIME | UTC, server default |
 
 ---
 
----
+## Demo Walkthrough
 
-## Demo Instructions (for judges)
-
-1. Open link
-2. Log in with the demo credentials from `.env.example`
-3. Ask: _"Explain how transformer attention mechanisms work"_ → watch token count (~15,000)
-4. Ask 9 more related questions on the same topic
-5. On interaction 10, observe:
-   - Token count drops to ~720
-   - Model shown changes to a smaller variant
-   - Response arrives nearly instantly
+1. Open `http://localhost:5173`
+2. Sign in with `demo` / `demo1234`
+3. Ask: *"Explain how transformer attention mechanisms work"* → ~670 tokens, large model, ~7 s
+4. Ask 4–9 follow-up questions on the same topic
+5. By interaction 10, observe:
+   - Input tokens **drop to ~268**
+   - Model badge turns **green** (small model)
+   - Latency falls below **2 seconds**
    - Token Savings Chart shows the full downward curve
-6. Click the Pipeline Steps panel to see each of the 12 steps light up in real time
+   - "Saved $X.XX" cost counter grows
+6. Click **Reset Session** and ask the original question again — token count returns to ~670 (proving the optimization is memory-driven, not response caching)
+
+---
+
+## Configuration
+
+Required environment variables (see `.env.example`):
+
+```bash
+# JWT
+SECRET_KEY=<openssl rand -hex 32>
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+ALGORITHM=HS256
+
+# Database
+DATABASE_URL=sqlite:///./eternomind.db
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# ChromaDB (embedded by default)
+CHROMA_HOST=localhost
+CHROMA_PORT=8001
+CHROMA_USE_HTTP=false           # set true for Docker/production HTTP mode
+
+# Provider keys
+GROQ_API_KEY=gsk_...
+HINDSIGHT_API_KEY=hsk_...
+# cascadeflow needs no key — uses GROQ_API_KEY directly
+
+# Models
+GROQ_LARGE_MODEL=llama-3.3-70b-versatile
+GROQ_SMALL_MODEL=llama-3.1-8b-instant
+
+# CORS
+CORS_ORIGINS=http://localhost:5173
+```
 
 ---
 
 ## Contributors
 
-| Role | Name | Owns |
-|------|------|------|
-| Backend Core | **Preethesh Carvalho** | FastAPI scaffold, SQLite + Alembic, JWT auth, security middleware, sessions, health |
-| AI/Agent Pipeline | **Imran Kazia** | LangGraph state machine, Hindsight memory, ChromaDB RAG, prompt optimizer, cascadeflow routing, Groq inference |
-| Frontend + Integration | **Deepthi C J** | React UI, chat streaming, token savings chart, pipeline panel, model selector, Docker Compose |
+Built for the **Building AI Agents with Hindsight & cascadeflow** hackathon.
+
+| Name | Role | Domain |
+|------|------|--------|
+| **Preethesh Carvalho** | Backend Core | FastAPI scaffold, SQLite + Alembic, JWT auth, security middleware, sessions, health, integration testing |
+| **Imran Kazia** | AI / Agent Pipeline | LangGraph state machine, Hindsight memory, ChromaDB RAG, prompt optimizer, cascadeflow routing, Groq inference |
+| **Deepthi C J** | Frontend & Integration | React UI, chat streaming, token-savings chart, pipeline panel, model selector, Docker Compose |
+| **Navya** | Design & Product | UI/UX direction, landing page concept, design system, demo storytelling |
+| **Abhinav** | Design & Product | Visual design, brand identity, dashboard layout, animations |
 
 ---
 
 ## License
 
-MIT — built for the **Building AI Agents with Hindsight & cascadeflow** hackathon.
-
----
-
-
+Released under the [MIT License](https://opensource.org/licenses/MIT). Built with ❤️ for the *Building AI Agents with Hindsight & cascadeflow* hackathon.
