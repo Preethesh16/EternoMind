@@ -43,14 +43,14 @@ class Settings(BaseSettings):
     # 4 available Groq models with different specializations
     groq_model_small: str = "llama-3.1-8b-instant"            # Small (Fast) - 8B params
     groq_model_large: str = "llama-3.3-70b-versatile"         # Large (Accurate) - 70B params
-    groq_model_expert: str = "mixtral-8x7b-32768"             # Expert (Specialized) - MoE 56B
+    groq_model_expert: str = "meta-llama/llama-4-scout-17b-16e-instruct"  # Expert (Specialized) - Llama 4 Scout
     groq_model_vision: str = "llama-3.3-70b-versatile"        # Vision - fallback to Large (3.2-90b-vision deprecated)
     
     # Model routing by complexity level (1-5)
     groq_model_very_simple: str = "llama-3.1-8b-instant"      # Level 1: Factual/simple → Small
     groq_model_simple: str = "llama-3.1-8b-instant"           # Level 2: Light reasoning → Small
     groq_model_medium: str = "llama-3.3-70b-versatile"        # Level 3: Standard reasoning → Large
-    groq_model_complex: str = "mixtral-8x7b-32768"            # Level 4: Complex/specialized → Expert
+    groq_model_complex: str = "meta-llama/llama-4-scout-17b-16e-instruct"  # Level 4: Complex/specialized → Scout
     groq_model_very_complex: str = "llama-3.3-70b-versatile"  # Level 5: Very complex/creative → Large
     
     # Legacy aliases for backward compatibility

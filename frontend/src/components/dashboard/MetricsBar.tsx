@@ -39,17 +39,40 @@ export function MetricsBar() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Tokens */}
-        <div className="bg-gray-900 rounded-lg p-2.5">
-          <p className="text-gray-500 text-[10px] mb-0.5 uppercase tracking-wider">Total Tokens</p>
-          <p className="text-white text-xl font-mono font-bold">
-            {lastMetrics.total_tokens.toLocaleString()}
-          </p>
-          {lastMetrics.token_estimate && (
-            <p className="text-green-400 text-[9px] mt-0.5 font-medium">
-               Optimized from ~{Math.round(lastMetrics.token_estimate * 1.8)}
-            </p>
-          )}
+        {/* Tokens — Before vs After */}
+        <div className="bg-gray-900 rounded-lg p-2.5 col-span-2">
+          <p className="text-gray-500 text-[10px] mb-1.5 uppercase tracking-wider">Token Optimization</p>
+          <div className="flex items-center gap-3">
+            {/* Before (raw) */}
+            <div className="flex flex-col items-center">
+              <p className="text-red-400 text-[9px] uppercase font-medium">Before</p>
+              <p className="text-red-300 text-lg font-mono font-bold">
+                {lastMetrics.raw_token_estimate
+                  ? lastMetrics.raw_token_estimate.toLocaleString()
+                  : Math.round((lastMetrics.token_estimate || lastMetrics.total_tokens) * 1.8).toLocaleString()}
+              </p>
+            </div>
+            {/* Arrow */}
+            <span className="text-gray-500 text-lg">→</span>
+            {/* After (optimized) */}
+            <div className="flex flex-col items-center">
+              <p className="text-green-400 text-[9px] uppercase font-medium">After</p>
+              <p className="text-green-300 text-lg font-mono font-bold">
+                {lastMetrics.total_tokens.toLocaleString()}
+              </p>
+            </div>
+            {/* Savings % */}
+            <div className="ml-auto bg-green-500/10 border border-green-500/30 rounded-lg px-2.5 py-1.5">
+              <p className="text-green-400 text-sm font-bold font-mono">
+                {(() => {
+                  const raw = lastMetrics.raw_token_estimate || Math.round((lastMetrics.token_estimate || lastMetrics.total_tokens) * 1.8)
+                  const saved = Math.round(((raw - lastMetrics.total_tokens) / raw) * 100)
+                  return saved > 0 ? `-${saved}%` : '0%'
+                })()}
+              </p>
+              <p className="text-green-500/70 text-[8px] uppercase">saved</p>
+            </div>
+          </div>
         </div>
 
         {/* Latency */}

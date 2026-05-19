@@ -12,6 +12,7 @@ export function useChat() {
   const sessionId = useSessionStore((s) => s.sessionId)
   const userId = useSessionStore((s) => s.userId)
   const accessToken = useSessionStore((s) => s.accessToken)
+  const selectedModel = useSessionStore((s) => s.selectedModel)
 
   const addUserMessage = useChatStore((s) => s.addUserMessage)
   const startAssistantMessage = useChatStore((s) => s.startAssistantMessage)
@@ -43,7 +44,12 @@ export function useChat() {
             'Content-Type': 'application/json',
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-          body: JSON.stringify({ session_id: sessionId, message: content, user_id: userId }),
+          body: JSON.stringify({
+            session_id: sessionId,
+            message: content,
+            user_id: userId,
+            model: selectedModel === 'auto' ? null : selectedModel,
+          }),
           signal: abortRef.current.signal,
         })
 
@@ -104,6 +110,7 @@ export function useChat() {
                   prompt_goal?: string;
                   complexity_score?: number;
                   token_estimate?: number;
+                  raw_token_estimate?: number;
                   safety_score?: number;
                   estimated_cost?: number;
                 }
@@ -126,6 +133,7 @@ export function useChat() {
                   prompt_goal: d.prompt_goal,
                   complexity_score: d.complexity_score,
                   token_estimate: d.token_estimate,
+                  raw_token_estimate: d.raw_token_estimate,
                   safety_score: d.safety_score,
                   estimated_cost: d.estimated_cost,
                 })
@@ -164,7 +172,7 @@ export function useChat() {
         }
       }
     },
-    [sessionId, userId, accessToken, addUserMessage, startAssistantMessage, appendToken,
+    [sessionId, userId, accessToken, selectedModel, addUserMessage, startAssistantMessage, appendToken,
      finalizeMessage, setPipelineStep, addInteraction, refreshMetrics]
   )
 

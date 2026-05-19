@@ -25,3 +25,9 @@ Thumbs.db
 
 # ChromaDB embedded data
 chroma_data/
+
+# Test virtual environment
+test_env/
+
+# Redis dump
+dump.rdb

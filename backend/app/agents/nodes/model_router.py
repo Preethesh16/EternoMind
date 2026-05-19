@@ -57,7 +57,20 @@ def _detect_vision_task(query: str) -> bool:
 async def model_router_node(state: AgentState) -> AgentState:
     """Select the appropriate Groq model based on task type, complexity, and safety."""
     from app.config import settings
-    
+
+    # If user manually selected a model, skip auto-routing entirely
+    force_model = state.get("_force_model")  # type: ignore[call-overload]
+    if force_model:
+        logger.info("[model_router] ✋ MANUAL OVERRIDE → %s", force_model)
+        event_callback = state.get("_event_callback")  # type: ignore[call-overload]
+        if event_callback:
+            await event_callback("pipeline_step", {
+                "step": "model_router",
+                "status": "complete",
+                "selected_model": force_model,
+            })
+        return {**state, "selected_model": force_model}
+
     logger.info(
         "[model_router] memory_hits=%d token_estimate=%d complexity=%d",
         state["memory_hits"],

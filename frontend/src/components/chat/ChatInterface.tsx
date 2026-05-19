@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../stores/chatStore'
+import { useSessionStore } from '../../stores/sessionStore'
 import { useChat } from '../../hooks/useChat'
 import { MessageBubble } from './MessageBubble'
+import { ModelSelector } from './ModelSelector'
 
 export function ChatInterface() {
   const [input, setInput] = useState('')
@@ -11,6 +13,8 @@ export function ChatInterface() {
   const messages = useChatStore((s) => s.messages)
   const isLoading = useChatStore((s) => s.isLoading)
   const currentPipelineStep = useChatStore((s) => s.currentPipelineStep)
+  const selectedModel = useSessionStore((s) => s.selectedModel)
+  const setSelectedModel = useSessionStore((s) => s.setSelectedModel)
   const { sendMessage } = useChat()
 
   // Auto-scroll to bottom on new messages
@@ -78,7 +82,12 @@ export function ChatInterface() {
 
       {/* Input bar */}
       <div className="px-4 py-4 border-t border-gray-800">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-end">
+          <ModelSelector
+            value={selectedModel}
+            onChange={setSelectedModel}
+            disabled={isLoading}
+          />
           <input
             className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
             placeholder="Ask EternoMind anything…"

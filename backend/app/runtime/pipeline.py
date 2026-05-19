@@ -54,6 +54,7 @@ async def run_pipeline(
     user_id: str,
     event_callback: EventCallback,
     safety_score: int = 50,
+    force_model: str | None = None,
 ) -> AgentState:
     """Execute the full EternoMind AI pipeline for one user message."""
     start_ms = time.time() * 1000
@@ -71,7 +72,7 @@ async def run_pipeline(
         "token_estimate": 0,
         "prompt_goal": "",
         "complexity_score": 3,
-        "selected_model": "",
+        "selected_model": force_model or "",  # pre-fill if user chose a model
         "response_text": "",
         "token_count_input": 0,
         "token_count_output": 0,
@@ -79,6 +80,7 @@ async def run_pipeline(
         "retry_count": 0,
         "pipeline_start_ms": start_ms,
         "_event_callback": event_callback,  # type: ignore[typeddict-unknown-key]
+        "_force_model": force_model,        # type: ignore[typeddict-unknown-key]
     }
 
     try:
