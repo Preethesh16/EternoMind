@@ -150,6 +150,7 @@ async def chat(
                 "response_text": final_state.get("response_text", ""),
                 "optimized_prompt": final_state.get("optimized_prompt", ""),
                 "prompt_goal": final_state.get("prompt_goal", ""),
+                "complexity_score": final_state.get("complexity_score", 1),
                 "token_estimate": final_state.get("token_estimate", 0),
             },
         )

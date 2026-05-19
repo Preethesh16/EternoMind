@@ -23,21 +23,56 @@ export function MessageBubble({ message }: Props) {
 
         {/* Metrics bar — only for assistant, only after streaming done */}
         {!isUser && !message.isStreaming && message.metrics && (
-          <div className="flex items-center gap-3 mt-1.5 px-1 text-xs text-gray-500">
-            <span className="font-mono">
-              {message.metrics.total_tokens.toLocaleString()} tokens
-            </span>
-            <span>·</span>
-            <span
-              className={`font-mono font-medium ${modelBadgeTextClasses(message.metrics.model)}`}
-              title={message.metrics.model}
-            >
-              {message.metrics.model}
-            </span>
-            <span>·</span>
-            <span className="font-mono">{message.metrics.latency_ms.toFixed(0)} ms</span>
-            <span>·</span>
-            <span className="font-mono">{message.metrics.memory_hits} memories</span>
+          <div className="mt-2 space-y-1.5">
+            {/* Primary metrics */}
+            <div className="flex items-center gap-3 px-1 text-xs text-gray-500">
+              <span className="font-mono">
+                {message.metrics.total_tokens.toLocaleString()} tokens
+              </span>
+              <span>·</span>
+              <span
+                className={`font-mono font-medium ${modelBadgeTextClasses(message.metrics.model)}`}
+                title={message.metrics.model}
+              >
+                {message.metrics.model}
+              </span>
+              <span>·</span>
+              <span className="font-mono">{message.metrics.latency_ms.toFixed(0)} ms</span>
+              <span>·</span>
+              <span className="font-mono">{message.metrics.memory_hits} memories</span>
+            </div>
+
+            {/* Secondary metrics: Complexity and Prompt Goal */}
+            {(message.metrics.complexity_score || message.metrics.prompt_goal) && (
+              <div className="flex items-center gap-3 px-1 text-xs text-gray-400">
+                {message.metrics.complexity_score && (
+                  <>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="text-gray-500">Complexity:</span>
+                      <span
+                        className={`font-mono font-medium px-2 py-0.5 rounded ${
+                          message.metrics.complexity_score === 1
+                            ? 'bg-green-900/30 text-green-300'
+                            : message.metrics.complexity_score === 2
+                              ? 'bg-yellow-900/30 text-yellow-300'
+                              : 'bg-red-900/30 text-red-300'
+                        }`}
+                      >
+                        {message.metrics.complexity_score === 1
+                          ? 'Simple'
+                          : message.metrics.complexity_score === 2
+                            ? 'Medium'
+                            : 'Complex'}
+                      </span>
+                    </span>
+                    {message.metrics.prompt_goal && <span>·</span>}
+                  </>
+                )}
+                {message.metrics.prompt_goal && (
+                  <span className="text-gray-400 italic">Goal: {message.metrics.prompt_goal}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -280,8 +280,8 @@ async def demo_optimization():
     print_subsection("Cost Analysis (Using Groq Pricing)")
     
     # Groq pricing (approximate)
-    large_model_input_cost = 0.02  # per 1M tokens
-    small_model_input_cost = 0.05  # per 1M tokens
+    large_model_input_cost = 0.59  # per 1M tokens (Llama 3.3 70B)
+    small_model_input_cost = 0.05  # per 1M tokens (Llama 3.1 8B)
     
     large_model_cost = (original_tokens / 1_000_000) * large_model_input_cost
     small_model_cost = (optimized_tokens / 1_000_000) * small_model_input_cost

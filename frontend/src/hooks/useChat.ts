@@ -99,6 +99,7 @@ export function useChat() {
                   response_text?: string;
                   optimized_prompt?: string;
                   prompt_goal?: string;
+                  complexity_score?: number;
                   token_estimate?: number;
                 }
                 // If the message bubble is empty (no token events arrived),
@@ -118,6 +119,7 @@ export function useChat() {
                   memory_hits: d.memory_hits,
                   optimized_prompt: d.optimized_prompt,
                   prompt_goal: d.prompt_goal,
+                  complexity_score: d.complexity_score,
                   token_estimate: d.token_estimate,
                 })
                 addInteraction({

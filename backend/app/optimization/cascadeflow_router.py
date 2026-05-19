@@ -103,43 +103,50 @@ class CascadeflowRouter:
             )
 
     def _rule_based_route(
-        self, memory_hits: int, token_estimate: int
+        self, memory_hits: int, token_estimate: int, complexity_score: int = 1
     ) -> str:
         """Deterministic routing logic — also used as the SDK fallback."""
+        # Use LARGE model if task is high complexity (3), regardless of memory
+        if complexity_score >= 3:
+            return settings.groq_large_model
+            
+        # If medium complexity (2), we only use SMALL if we have very high memory hits
+        if complexity_score == 2:
+            if memory_hits >= 6 and token_estimate < 1500:
+                return settings.groq_small_model
+            return settings.groq_large_model
+            
+        # Low complexity (1) - original logic
         if memory_hits >= 4 and token_estimate < 2000:
             return settings.groq_small_model
         return settings.groq_large_model
 
-    async def route(self, memory_hits: int, token_estimate: int) -> str:
+    async def route(self, memory_hits: int, token_estimate: int, complexity_score: int = 1) -> str:
         """
         Select the Groq model for this pipeline run.
 
         Args:
-            memory_hits:    Number of Hindsight memories that passed the relevancy filter.
-            token_estimate: Estimated token count of the optimized prompt.
+            memory_hits:      Number of Hindsight memories that passed the relevancy filter.
+            token_estimate:   Estimated token count of the optimized prompt.
+            complexity_score: Rated complexity of the task (1-3).
 
         Returns:
             Groq model name string.
         """
         self._try_init_sdk()
 
-        # SWITCHING LOGIC:
-        # We switch to the SMALL model only if we have high memory coverage (high confidence)
-        # AND the prompt is small enough to fit in its context efficiently.
-        # Otherwise, we default to the LARGE model for higher reasoning quality.
-        
-        use_small = memory_hits >= 4 and token_estimate < 2000
-        selected_model = settings.groq_small_model if use_small else settings.groq_large_model
+        selected_model = self._rule_based_route(memory_hits, token_estimate, complexity_score)
+        use_small = selected_model == settings.groq_small_model
 
         if use_small:
             logger.info(
-                "🔄 SWITCHING TO SMALL MODEL: High memory coverage (%d hits) and low tokens (%d)",
-                memory_hits, token_estimate
+                "🔄 SWITCHING TO SMALL MODEL: Complexity=%d, Memory=%d, Tokens=%d",
+                complexity_score, memory_hits, token_estimate
             )
         else:
             logger.info(
-                "⚡ USING LARGE MODEL: Task requires high reasoning (hits=%d, tokens=%d)",
-                memory_hits, token_estimate
+                "⚡ USING LARGE MODEL: Complexity=%d, Memory=%d, Tokens=%d",
+                complexity_score, memory_hits, token_estimate
             )
 
         if self._sdk_available:

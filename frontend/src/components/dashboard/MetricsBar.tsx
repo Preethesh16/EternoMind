@@ -79,6 +79,37 @@ export function MetricsBar() {
             {lastMetrics.memory_hits}
           </p>
         </div>
+
+        {/* Complexity */}
+        {lastMetrics.complexity_score && (
+          <div className="bg-gray-900 rounded-lg p-2.5">
+            <p className="text-gray-500 text-[10px] mb-1 uppercase tracking-wider">Complexity</p>
+            <span
+              className={`inline-block text-[10px] font-mono font-medium px-2 py-0.5 rounded-full ${
+                lastMetrics.complexity_score === 1
+                  ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                  : lastMetrics.complexity_score === 2
+                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              }`}
+              title={`Complexity Level ${lastMetrics.complexity_score}`}
+            >
+              {lastMetrics.complexity_score === 1
+                ? 'Simple'
+                : lastMetrics.complexity_score === 2
+                  ? 'Medium'
+                  : 'Complex'}
+            </span>
+          </div>
+        )}
+
+        {/* Prompt Goal */}
+        {lastMetrics.prompt_goal && (
+          <div className="bg-gray-900 rounded-lg p-2.5 col-span-2">
+            <p className="text-gray-500 text-[10px] mb-1 uppercase tracking-wider">Prompt Goal</p>
+            <p className="text-gray-300 text-xs italic line-clamp-2">{lastMetrics.prompt_goal}</p>
+          </div>
+        )}
       </div>
 
       {/* Optimized Prompt Modal */}
@@ -97,14 +128,44 @@ export function MetricsBar() {
                 </div>
               </div>
 
-              {lastMetrics.prompt_goal && (
-                <div className="mb-4">
-                  <span className="text-green-500 mb-1 block uppercase text-[10px] font-bold tracking-widest">Surgical Goal (Automated)</span>
-                  <div className="text-green-400 bg-green-500/10 p-3 rounded border border-green-500/30 text-base font-bold italic">
-                    "{lastMetrics.prompt_goal}"
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {lastMetrics.prompt_goal && (
+                  <div className="col-span-2">
+                    <span className="text-green-500 mb-1 block uppercase text-[10px] font-bold tracking-widest">Surgical Goal (Automated)</span>
+                    <div className="text-green-400 bg-green-500/10 p-3 rounded border border-green-500/30 text-base font-bold italic">
+                      "{lastMetrics.prompt_goal}"
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Task Complexity</span>
+                  <div className="bg-gray-800 p-2 rounded border border-gray-700 flex items-center gap-2">
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map((i) => (
+                        <div 
+                          key={i}
+                          className={`w-3 h-3 rounded-full ${
+                            (lastMetrics.complexity_score || 1) >= i 
+                              ? i === 3 ? 'bg-red-500' : i === 2 ? 'bg-yellow-500' : 'bg-green-500'
+                              : 'bg-gray-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-white text-xs font-medium">
+                      {lastMetrics.complexity_score === 3 ? 'High' : lastMetrics.complexity_score === 2 ? 'Medium' : 'Low'}
+                    </span>
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Selected Model</span>
+                  <div className={`text-[10px] font-mono font-medium px-2 py-2 rounded border ${modelBadgeClasses(lastMetrics.model)}`}>
+                    {lastMetrics.model}
+                  </div>
+                </div>
+              </div>
 
               <div>
                 <span className="text-gray-500 mb-1 block uppercase text-[10px] tracking-widest">Optimized LLM Prompt</span>

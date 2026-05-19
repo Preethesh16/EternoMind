@@ -9,7 +9,21 @@ export interface ChatRequest {
 export type SSEEvent =
   | { event: 'pipeline_step'; data: { step: string; status: 'running' }; token_delta: '' }
   | { event: 'token'; data: { step: 'response'; token_delta: string }; token_delta: string }
-  | { event: 'done'; data: { total_tokens: number; model: string; latency_ms: number; memory_hits: number }; token_delta: '' }
+  | {
+      event: 'done'
+      data: {
+        total_tokens: number
+        model: string
+        latency_ms: number
+        memory_hits: number
+        response_text?: string
+        optimized_prompt?: string
+        prompt_goal?: string
+        complexity_score?: number
+        token_estimate?: number
+      }
+      token_delta: ''
+    }
   | { event: 'error'; data: { step: string; message: string }; token_delta: '' }
 
 /**

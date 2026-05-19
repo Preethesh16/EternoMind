@@ -7,6 +7,7 @@ export interface MessageMetrics {
   memory_hits: number
   optimized_prompt?: string
   prompt_goal?: string
+  complexity_score?: number
   token_estimate?: number
 }
 

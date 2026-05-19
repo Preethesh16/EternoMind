@@ -34,7 +34,7 @@ class PromptOptimizer:
         memories: list[dict],
         rag_docs: list[dict],
         groq_client: Any = None,
-    ) -> tuple[str, int, str]:
+    ) -> tuple[str, int, str, int]:
         """
         Build an optimized prompt from the query, memories, and RAG docs.
 
@@ -45,7 +45,7 @@ class PromptOptimizer:
             groq_client: Optional AsyncGroq client to generate a 'goal' summary.
 
         Returns:
-            (optimized_prompt, estimated_token_count, prompt_goal)
+            (optimized_prompt, estimated_token_count, prompt_goal, complexity_score)
         """
         memory_hits = len(memories)
         aggressive = memory_hits >= 5
@@ -100,33 +100,45 @@ class PromptOptimizer:
         token_estimate = int(len(optimized_prompt.split()) * 1.2)
 
         prompt_goal = "Synthesize an answer using relevant context."
+        complexity_score = 1  # 1 (low), 2 (medium), 3 (high)
+        
         if groq_client:
             try:
                 from app.config import settings
-                # Quickly derive the goal of this prompt using the SMALL model
-                goal_query = (
-                    "Summarize the primary goal of this user request in ONE short phrase "
-                    "(e.g. 'Retrieve technical steps' or 'Verify user name'). "
-                    f"User Request: {query}"
+                # Quickly derive the goal and complexity of this prompt using the SMALL model
+                analysis_query = (
+                    "Analyze this user request: '" + query + "'\n"
+                    "1. Summarize the primary goal in ONE short phrase.\n"
+                    "2. Rate complexity from 1 to 3 (1=simple fact, 2=reasoning, 3=creative/complex coding).\n"
+                    "Return ONLY in this format: Goal: [phrase] | Complexity: [1, 2, or 3]"
                 )
-                goal_resp = await groq_client.chat.completions.create(
+                analysis_resp = await groq_client.chat.completions.create(
                     model=settings.groq_small_model,
-                    messages=[{"role": "user", "content": goal_query}],
-                    max_tokens=40,
+                    messages=[{"role": "user", "content": analysis_query}],
+                    max_tokens=60,
                 )
-                prompt_goal = goal_resp.choices[0].message.content.strip().strip('"')
+                result = analysis_resp.choices[0].message.content.strip()
+                if "|" in result:
+                    goal_part, complex_part = result.split("|")
+                    prompt_goal = goal_part.replace("Goal:", "").strip().strip('"')
+                    complexity_str = complex_part.replace("Complexity:", "").strip()
+                    try:
+                        complexity_score = int(complexity_str)
+                    except:
+                        complexity_score = 2
             except Exception as e:
-                logger.warning("[prompt_optimizer] Goal extraction failed: %s", e)
+                logger.warning("[prompt_optimizer] Goal/Complexity extraction failed: %s", e)
 
         logger.info(
-            "[prompt_optimizer] memories=%d docs=%d aggressive=%s tokens≈%d goal='%s'",
+            "[prompt_optimizer] memories=%d docs=%d aggressive=%s tokens≈%d goal='%s' complexity=%d",
             len(top_memories),
             len(top_docs),
             aggressive,
             token_estimate,
             prompt_goal,
+            complexity_score
         )
-        return optimized_prompt, token_estimate, prompt_goal
+        return optimized_prompt, token_estimate, prompt_goal, complexity_score
 
 
 # Module-level singleton
